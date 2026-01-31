@@ -19,17 +19,14 @@
 
 .suggestion-card-footer {
   position: absolute;
-  bottom: 14px;
+  bottom: -40px;
   left: 32px;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: all var(--transition-normal);
+  transition: bottom var(--transition-normal);
   pointer-events: none;
 }
 
 .suggestion-card:hover .suggestion-card-footer {
-  opacity: 1;
-  transform: translateY(0);
+  bottom: 14px;
   pointer-events: auto;
 }
 
@@ -102,10 +99,11 @@
   font-family: var(--font-family);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
+  color: #D6CCBA;
   margin-bottom: 10px;
   line-height: var(--line-height-tight);
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .suggestion-card-description {
@@ -154,19 +152,22 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background-color: #374151;
-  color: var(--text-primary);
+  background: rgba(40, 48, 61, 0.75);
+  color: #D6CCBA;
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-md);
-  border: 2px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .suggestion-card-chat-btn:hover {
-  border-color: #adadad;
+  background: rgba(40, 48, 61, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .suggestion-card-feedback {
@@ -234,10 +235,10 @@
 
 /* Project Card */
 .project-card {
-  background-color: var(--bg-card);
+  background-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--border-subtle);
+  border: 2px solid transparent;
   border-radius: var(--radius-xl);
   padding: var(--spacing-lg);
   transition: all var(--transition-fast);
@@ -245,19 +246,18 @@
 }
 
 .project-card:hover {
-  background-color: var(--bg-card-hover);
+  background-color: rgba(255, 255, 255, 0.15);
   border-color: var(--border-medium);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
 }
 
 .project-card-title {
   font-family: var(--font-family);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  color: var(--text-heading);
+  color: #D6CCBA;
   margin-bottom: var(--spacing-sm);
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .project-card-goal {
@@ -297,20 +297,22 @@
 
 .project-card-open-btn {
   padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--accent-primary);
-  color: var(--text-on-accent);
+  background: rgba(40, 48, 61, 0.75);
+  color: #D6CCBA;
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .project-card-open-btn:hover {
-  background-color: var(--accent-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  background: rgba(40, 48, 61, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Status badges */

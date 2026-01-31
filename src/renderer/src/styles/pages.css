@@ -1,3 +1,12 @@
+/* Page title */
+.page-title {
+  font-size: 34px;
+  font-weight: 600;
+  margin-bottom: 0;
+  color: #D6CCBA;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 /* Time group headers */
 .time-group-header {
   margin-bottom: -20px;
@@ -6,9 +15,11 @@
 .time-group-header-text {
   font-family: var(--font-family);
   font-size: 12px;
-  color: #d2cbbf;
+  color: #D6CCBA;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  opacity: 0.7;
 }
 
 .time-group-header-line {
@@ -37,6 +48,7 @@
   letter-spacing: -0.02em;
   cursor: pointer;
   transition: opacity var(--transition-fast);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .project-details-title:hover {
@@ -79,114 +91,282 @@
   color: var(--accent-error);
 }
 
-/* User model page */
-.user-model-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.user-proposition-card {
+/* Memory page */
+.memory-controls {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  padding: 16px 20px;
-  background-color: transparent;
+  margin-bottom: var(--spacing-lg);
+}
+
+.memory-search {
+  flex: 1;
+  position: relative;
+  max-width: 400px;
+}
+
+.memory-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.memory-search-input {
+  width: 100%;
+  padding: 10px 36px 10px 42px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  color: #D6CCBA;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+}
+
+.memory-search-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(214, 204, 186, 0.2);
+}
+
+.memory-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.memory-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
   border: none;
-  border-bottom: 1px solid var(--border-subtle);
-  border-radius: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.memory-search-clear:hover {
+  color: #D6CCBA;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.memory-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(40, 48, 61, 0.75);
+  color: #D6CCBA;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.user-proposition-card:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+.memory-add-btn:hover {
+  background: rgba(40, 48, 61, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-.user-proposition-card::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background-color: #D6CCBA;
-  border-radius: 50%;
-  flex-shrink: 0;
-  opacity: 0.6;
+.memory-search-results {
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-md);
 }
 
-.user-proposition-content {
+/* Add row */
+.memory-add-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.memory-add-input {
   flex: 1;
-}
-
-.user-proposition-text {
+  background: transparent;
+  border: none;
+  color: #D6CCBA;
   font-family: var(--font-family);
   font-size: var(--font-size-base);
-  color: var(--text-primary);
-  line-height: var(--line-height-normal);
+  padding: 4px 0;
 }
 
-.user-proposition-text.editing {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(214, 204, 186, 0.3);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  width: 100%;
-  color: var(--text-primary);
-}
-
-.user-proposition-text.editing:focus {
+.memory-add-input:focus {
   outline: none;
-  background-color: rgba(255, 255, 255, 0.12);
 }
 
-.user-proposition-history {
-  font-family: var(--font-family-sans);
-  font-size: var(--font-size-xs);
+.memory-add-input::placeholder {
   color: var(--text-muted);
-  margin-top: var(--spacing-xs);
 }
 
-.user-proposition-actions {
+.memory-inline-save {
+  padding: 6px 14px;
+  background: rgba(123, 165, 123, 0.5);
+  color: #D6CCBA;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.memory-inline-save:hover {
+  background: rgba(123, 165, 123, 0.7);
+}
+
+.memory-inline-cancel {
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.memory-inline-cancel:hover {
+  color: #D6CCBA;
+}
+
+/* Empty state */
+.memory-empty {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.memory-empty-text {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.memory-empty-btn {
+  padding: 10px 20px;
+  background: rgba(40, 48, 61, 0.75);
+  color: #D6CCBA;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.memory-empty-btn:hover {
+  background: rgba(40, 48, 61, 0.9);
+}
+
+/* Memory list */
+.memory-list {
   display: flex;
-  gap: var(--spacing-xs);
+  flex-direction: column;
+}
+
+.memory-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background var(--transition-fast);
+}
+
+.memory-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.memory-row.editing {
+  background: rgba(255, 255, 255, 0.04);
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.memory-row-text {
+  flex: 1;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: #D6CCBA;
+  line-height: 1.5;
+}
+
+.memory-row-actions {
+  display: flex;
+  gap: var(--spacing-sm);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
-.user-proposition-card:hover .user-proposition-actions {
+.memory-row:hover .memory-row-actions {
   opacity: 1;
 }
 
-.user-proposition-actions .btn {
+.memory-row-btn {
+  padding: 4px 10px;
+  background: transparent;
   color: var(--text-muted);
-  padding: 6px;
-  border-radius: 50%;
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-.user-proposition-actions .btn:hover {
-  color: var(--text-primary);
-  background-color: rgba(255, 255, 255, 0.1);
+.memory-row-btn:hover {
+  color: #D6CCBA;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.add-proposition-btn {
+.memory-row-btn.delete:hover {
+  color: var(--accent-error);
+  background: rgba(196, 122, 108, 0.15);
+}
+
+/* Edit mode in row */
+.memory-row-edit {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: 16px 20px;
-  background-color: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  margin-top: var(--spacing-md);
+  width: 100%;
 }
 
-.add-proposition-btn:hover {
+.memory-edit-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
   color: #D6CCBA;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
 }
 
-.add-proposition-btn svg {
-  opacity: 0.6;
+.memory-edit-input:focus {
+  outline: none;
+  border-color: rgba(214, 204, 186, 0.25);
 }
 
 /* Customize agent page */
@@ -201,6 +381,7 @@
   color: #D6CCBA;
   margin-bottom: var(--spacing-sm);
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .customize-agent-section-description {
@@ -236,6 +417,7 @@
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--border-subtle);
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .settings-item {
@@ -258,8 +440,9 @@
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
+  color: #D6CCBA;
   margin-bottom: var(--spacing-xs);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .settings-item-description {
@@ -279,14 +462,21 @@
   position: relative;
   width: 48px;
   height: 28px;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: all var(--transition-fast);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch:hover {
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .toggle-switch.active {
-  background-color: var(--accent-primary);
+  background-color: rgba(123, 165, 123, 0.5);
+  border-color: rgba(123, 165, 123, 0.3);
 }
 
 .toggle-switch-knob {
@@ -315,25 +505,28 @@
 .slider {
   width: 160px;
   height: 6px;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
   appearance: none;
   cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .slider::-webkit-slider-thumb {
   appearance: none;
   width: 18px;
   height: 18px;
-  background-color: var(--accent-primary);
+  background: rgba(124, 154, 184, 0.8);
   border-radius: 50%;
   cursor: pointer;
-  transition: transform var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
+  background: rgba(124, 154, 184, 0.95);
 }
 
 .slider-value {

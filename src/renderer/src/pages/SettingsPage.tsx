@@ -32,7 +32,7 @@ export function SettingsPage(): React.JSX.Element {
     <div className="content-area">
       <div className="content-header">
         <div className="content-header-left">
-          <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600 }}>Settings</h1>
+          <h1 className="page-title">Settings</h1>
         </div>
       </div>
       <div className="content-body">

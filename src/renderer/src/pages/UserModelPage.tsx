@@ -1,12 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useData } from '../context/DataContext'
 
 export function UserModelPage(): React.JSX.Element {
   const { state, dispatch } = useData()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
-  const [newProposition, setNewProposition] = useState('')
+  const [newMemory, setNewMemory] = useState('')
   const [isAdding, setIsAdding] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const memories = state.userPropositions
+
+  const filteredMemories = useMemo(() => {
+    if (!searchQuery.trim()) return memories
+    const query = searchQuery.toLowerCase()
+    return memories.filter(m => m.text.toLowerCase().includes(query))
+  }, [memories, searchQuery])
 
   const handleStartEdit = (id: string, text: string): void => {
     setEditingId(id)
@@ -34,16 +43,16 @@ export function UserModelPage(): React.JSX.Element {
   }
 
   const handleAdd = (): void => {
-    if (newProposition.trim()) {
+    if (newMemory.trim()) {
       dispatch({
         type: 'ADD_PROPOSITION',
         payload: {
           id: `prop-${Date.now()}`,
-          text: newProposition.trim(),
+          text: newMemory.trim(),
           editHistory: []
         }
       })
-      setNewProposition('')
+      setNewMemory('')
       setIsAdding(false)
     }
   }
@@ -52,123 +61,155 @@ export function UserModelPage(): React.JSX.Element {
     <div className="content-area">
       <div className="content-header">
         <div className="content-header-left">
-          <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600 }}>Memory</h1>
+          <h1 className="page-title">Memory</h1>
         </div>
       </div>
       <div className="content-body">
-        <div className="page">
-          <div className="page-header">
-            <p className="page-subtitle">
-              Things learned about you over time. Edit or remove to refine.
-            </p>
-          </div>
+        <div className="page page-wide">
 
-          <div className="user-model-list">
-            {state.userPropositions.map((proposition) => (
-              <div key={proposition.id} className="user-proposition-card">
-                <div className="user-proposition-content">
-                  {editingId === proposition.id ? (
-                    <input
-                      type="text"
-                      className="user-proposition-text editing"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveEdit()
-                        if (e.key === 'Escape') handleCancelEdit()
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    <>
-                      <p className="user-proposition-text">{proposition.text}</p>
-                      {proposition.editHistory.length > 0 && (
-                        <p className="user-proposition-history">
-                          Previously: {proposition.editHistory[proposition.editHistory.length - 1]}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-                <div className="user-proposition-actions">
-                  {editingId === proposition.id ? (
-                    <>
-                      <button className="btn btn-sm btn-primary" onClick={handleSaveEdit}>
-                        Save
-                      </button>
-                      <button className="btn btn-sm btn-ghost" onClick={handleCancelEdit}>
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        className="btn btn-sm btn-ghost"
-                        onClick={() => handleStartEdit(proposition.id, proposition.text)}
-                        title="Edit"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                          <path d="M10.013 1.427a1.75 1.75 0 012.474 0l.086.086a1.75 1.75 0 010 2.474l-7.61 7.61a1.75 1.75 0 01-.756.445l-2.751.786a.75.75 0 01-.927-.928l.786-2.75a1.75 1.75 0 01.445-.757l7.61-7.61z" />
-                        </svg>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-ghost"
-                        onClick={() => handleDelete(proposition.id)}
-                        title="Delete"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                          <path d="M4.293 4.293a1 1 0 011.414 0L7 5.586l1.293-1.293a1 1 0 111.414 1.414L8.414 7l1.293 1.293a1 1 0 01-1.414 1.414L7 8.414l-1.293 1.293a1 1 0 01-1.414-1.414L5.586 7 4.293 5.707a1 1 0 010-1.414z" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {isAdding ? (
-              <div className="user-proposition-card">
-                <div className="user-proposition-content" style={{ width: '100%' }}>
-                  <input
-                    type="text"
-                    className="user-proposition-text editing"
-                    value={newProposition}
-                    onChange={(e) => setNewProposition(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAdd()
-                      if (e.key === 'Escape') {
-                        setIsAdding(false)
-                        setNewProposition('')
-                      }
-                    }}
-                    placeholder="Enter a new memory..."
-                    autoFocus
-                  />
-                </div>
-                <div className="user-proposition-actions" style={{ opacity: 1 }}>
-                  <button className="btn btn-sm btn-primary" onClick={handleAdd}>
-                    Add
-                  </button>
-                  <button
-                    className="btn btn-sm btn-ghost"
-                    onClick={() => {
-                      setIsAdding(false)
-                      setNewProposition('')
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button className="add-proposition-btn" onClick={() => setIsAdding(true)}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 110-2h4V3a1 1 0 011-1z" />
+          {/* Controls */}
+          {memories.length > 0 && (
+            <div className="memory-controls">
+              <div className="memory-search">
+                <svg className="memory-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
                 </svg>
-                Add new memory
+                <input
+                  type="text"
+                  className="memory-search-input"
+                  placeholder="Search memories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    className="memory-search-clear"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <button
+                className="memory-add-btn"
+                onClick={() => setIsAdding(true)}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Add
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Add input */}
+          {isAdding && (
+            <div className="memory-add-row">
+              <input
+                type="text"
+                className="memory-add-input"
+                value={newMemory}
+                onChange={(e) => setNewMemory(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAdd()
+                  if (e.key === 'Escape') {
+                    setIsAdding(false)
+                    setNewMemory('')
+                  }
+                }}
+                placeholder="What should I remember?"
+                autoFocus
+              />
+              <button className="memory-inline-save" onClick={handleAdd}>Save</button>
+              <button
+                className="memory-inline-cancel"
+                onClick={() => {
+                  setIsAdding(false)
+                  setNewMemory('')
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {memories.length === 0 && !isAdding && (
+            <div className="memory-empty">
+              <p className="memory-empty-text">
+                As we interact, I'll learn things about your preferences and goals.
+              </p>
+              <button
+                className="memory-empty-btn"
+                onClick={() => setIsAdding(true)}
+              >
+                Add something manually
+              </button>
+            </div>
+          )}
+
+          {/* Search results info */}
+          {searchQuery && (
+            <p className="memory-search-results">
+              {filteredMemories.length === 0
+                ? 'No matches found'
+                : `Showing ${filteredMemories.length} of ${memories.length}`
+              }
+            </p>
+          )}
+
+          {/* Memory list */}
+          {filteredMemories.length > 0 && (
+            <div className="memory-list">
+              {filteredMemories.map((memory) => (
+                <div
+                  key={memory.id}
+                  className={`memory-row ${editingId === memory.id ? 'editing' : ''}`}
+                >
+                  {editingId === memory.id ? (
+                    <div className="memory-row-edit">
+                      <input
+                        type="text"
+                        className="memory-edit-input"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEdit()
+                          if (e.key === 'Escape') handleCancelEdit()
+                        }}
+                        autoFocus
+                      />
+                      <button className="memory-inline-save" onClick={handleSaveEdit}>Save</button>
+                      <button className="memory-inline-cancel" onClick={handleCancelEdit}>Cancel</button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="memory-row-text">{memory.text}</p>
+                      <div className="memory-row-actions">
+                        <button
+                          className="memory-row-btn"
+                          onClick={() => handleStartEdit(memory.id, memory.text)}
+                          title="Edit"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="memory-row-btn delete"
+                          onClick={() => handleDelete(memory.id)}
+                          title="Delete"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

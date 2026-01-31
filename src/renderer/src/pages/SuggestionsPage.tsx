@@ -19,7 +19,7 @@ export function SuggestionsPage(): React.JSX.Element {
     <div className="content-area">
       <div className="content-header">
         <div className="content-header-left">
-          <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600 }}>Suggestions</h1>
+          <h1 className="page-title">Suggestions</h1>
         </div>
       </div>
       <div className="content-body">

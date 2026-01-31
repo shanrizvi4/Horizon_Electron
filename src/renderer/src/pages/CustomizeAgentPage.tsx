@@ -52,7 +52,7 @@ export function CustomizeAgentPage(): React.JSX.Element {
     <div className="content-area">
       <div className="content-header">
         <div className="content-header-left">
-          <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 600 }}>Customize Agent</h1>
+          <h1 className="page-title">Customize Agent</h1>
         </div>
       </div>
       <div className="content-body">
