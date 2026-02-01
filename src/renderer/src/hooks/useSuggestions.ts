@@ -16,28 +16,34 @@ interface UseSuggestionsReturn {
 }
 
 export function useSuggestions(): UseSuggestionsReturn {
-  const { state, dispatch, getSuggestionById, getProjectSuggestions, getActiveSuggestions } =
+  const { state, dispatch, getSuggestionById, getProjectSuggestions, getActiveSuggestions, syncToBackend } =
     useData()
 
   const updateSuggestion = useCallback(
     (suggestionId: string, updates: Partial<Suggestion>) => {
-      dispatch({ type: 'UPDATE_SUGGESTION', payload: { suggestionId, updates } })
+      const action = { type: 'UPDATE_SUGGESTION' as const, payload: { suggestionId, updates } }
+      dispatch(action)
+      syncToBackend(action)
     },
-    [dispatch]
+    [dispatch, syncToBackend]
   )
 
   const dismissSuggestion = useCallback(
     (suggestionId: string) => {
-      dispatch({ type: 'DISMISS_SUGGESTION', payload: { suggestionId } })
+      const action = { type: 'DISMISS_SUGGESTION' as const, payload: { suggestionId } }
+      dispatch(action)
+      syncToBackend(action)
     },
-    [dispatch]
+    [dispatch, syncToBackend]
   )
 
   const completeSuggestion = useCallback(
     (suggestionId: string) => {
-      dispatch({ type: 'COMPLETE_SUGGESTION', payload: { suggestionId } })
+      const action = { type: 'COMPLETE_SUGGESTION' as const, payload: { suggestionId } }
+      dispatch(action)
+      syncToBackend(action)
     },
-    [dispatch]
+    [dispatch, syncToBackend]
   )
 
   const sortSuggestions = useCallback((suggestions: Suggestion[], method: SortMethod) => {

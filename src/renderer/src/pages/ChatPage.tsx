@@ -2,8 +2,9 @@ import React from 'react'
 import { BackButton } from '../components/common/BackButton'
 import { ChatView } from '../components/chat/ChatView'
 import { useChat } from '../hooks/useChat'
-import { useProjects } from '../hooks/useProjects'
-import { useNavigation } from '../context/NavigationContext'
+// Unused imports kept for future use
+// import { useProjects } from '../hooks/useProjects'
+// import { useNavigation } from '../context/NavigationContext'
 
 interface ChatPageProps {
   chatId: string
@@ -11,8 +12,6 @@ interface ChatPageProps {
 
 export function ChatPage({ chatId }: ChatPageProps): React.JSX.Element {
   const { getChat } = useChat()
-  const { getProject } = useProjects()
-  const { openProject } = useNavigation()
 
   const chat = getChat(chatId)
 
@@ -32,8 +31,6 @@ export function ChatPage({ chatId }: ChatPageProps): React.JSX.Element {
       </div>
     )
   }
-
-  const associatedProject = chat.associatedProjectId ? getProject(chat.associatedProjectId) : null
 
   return (
     <div className="content-area">

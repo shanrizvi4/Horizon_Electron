@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useReducer, ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useRef } from 'react'
 import type {
   AppState,
   Project,
@@ -20,8 +20,14 @@ import {
   mockSettings
 } from '../data/mockData'
 
+// Check if running in Electron with API available
+const hasElectronAPI = (): boolean => {
+  return typeof window !== 'undefined' && window.api && typeof window.api.state?.getAll === 'function'
+}
+
 // Action types
 type DataAction =
+  | { type: 'SET_STATE'; payload: AppState }
   | { type: 'UPDATE_SUGGESTION'; payload: { suggestionId: string; updates: Partial<Suggestion> } }
   | { type: 'DISMISS_SUGGESTION'; payload: { suggestionId: string } }
   | { type: 'COMPLETE_SUGGESTION'; payload: { suggestionId: string } }
@@ -40,8 +46,8 @@ type DataAction =
   | { type: 'UPDATE_AGENT_CONFIG'; payload: Partial<CustomizeAgentData> }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<AppSettings> }
 
-// Initial state
-const initialState: AppState = {
+// Default state when no persisted data exists (used as fallback)
+const defaultState: AppState = {
   projects: mockProjects,
   suggestions: mockSuggestions,
   chats: mockChats,
@@ -54,6 +60,10 @@ const initialState: AppState = {
 // Reducer
 function dataReducer(state: AppState, action: DataAction): AppState {
   switch (action.type) {
+    case 'SET_STATE': {
+      return action.payload
+    }
+
     case 'UPDATE_SUGGESTION': {
       const { suggestionId, updates } = action.payload
       return {
@@ -197,6 +207,7 @@ function dataReducer(state: AppState, action: DataAction): AppState {
 interface DataContextValue {
   state: AppState
   dispatch: React.Dispatch<DataAction>
+  isLoading: boolean
   // Helper functions
   getSuggestionById: (id: string) => Suggestion | undefined
   getProjectById: (id: number) => Project | undefined
@@ -205,6 +216,8 @@ interface DataContextValue {
   getActiveSuggestions: () => Suggestion[]
   getActiveProjects: () => Project[]
   getRecentChats: (limit?: number) => Chat[]
+  // API sync functions
+  syncToBackend: (action: DataAction) => Promise<void>
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined)
@@ -215,7 +228,110 @@ interface DataProviderProps {
 }
 
 export function DataProvider({ children }: DataProviderProps): React.JSX.Element {
-  const [state, dispatch] = useReducer(dataReducer, initialState)
+  const [state, dispatch] = useReducer(dataReducer, defaultState)
+  const [isLoading, setIsLoading] = React.useState(true)
+  const initializedRef = useRef(false)
+
+  // Load initial state from backend
+  useEffect(() => {
+    if (initializedRef.current) return
+    initializedRef.current = true
+
+    const loadState = async (): Promise<void> => {
+      if (!hasElectronAPI()) {
+        console.log('No Electron API available, using mock data')
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const backendState = await window.api.state.getAll()
+        // If backend has any data, use it; otherwise keep default mock data for first run
+        const hasData = backendState && (
+          backendState.projects.length > 0 ||
+          backendState.suggestions.length > 0 ||
+          backendState.chats.length > 0 ||
+          backendState.userPropositions.length > 0 ||
+          backendState.lastUpdateId > 0
+        )
+        if (hasData) {
+          dispatch({ type: 'SET_STATE', payload: backendState })
+        }
+
+        // Subscribe to state updates from main process
+        await window.api.state.subscribe()
+
+        // Listen for state updates
+        window.api.state.onUpdate((newState: AppState) => {
+          dispatch({ type: 'SET_STATE', payload: newState })
+        })
+      } catch (error) {
+        console.error('Failed to load state from backend:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadState()
+  }, [])
+
+  // Sync action to backend
+  const syncToBackend = async (action: DataAction): Promise<void> => {
+    if (!hasElectronAPI()) return
+
+    try {
+      switch (action.type) {
+        case 'UPDATE_SUGGESTION':
+          await window.api.suggestions.update(action.payload.suggestionId, action.payload.updates)
+          break
+        case 'DISMISS_SUGGESTION':
+          await window.api.suggestions.dismiss(action.payload.suggestionId)
+          break
+        case 'COMPLETE_SUGGESTION':
+          await window.api.suggestions.complete(action.payload.suggestionId)
+          break
+        case 'UPDATE_PROJECT':
+          await window.api.projects.update(action.payload.projectId, action.payload.updates)
+          break
+        case 'DELETE_PROJECT':
+          await window.api.projects.delete(action.payload.projectId)
+          break
+        case 'CREATE_CHAT':
+          await window.api.chats.create(action.payload)
+          break
+        case 'UPDATE_CHAT':
+          // Chat updates are handled directly - no separate API call needed
+          break
+        case 'ADD_MESSAGE':
+          await window.api.chats.addMessage(action.payload.chatId, action.payload.message)
+          break
+        case 'UPDATE_MESSAGE':
+          await window.api.chats.updateMessage(
+            action.payload.chatId,
+            action.payload.messageId,
+            action.payload.updates
+          )
+          break
+        case 'ADD_PROPOSITION':
+          // Already added via userModel.add() in hook
+          break
+        case 'UPDATE_PROPOSITION':
+          await window.api.userModel.update(action.payload.id, action.payload.text)
+          break
+        case 'DELETE_PROPOSITION':
+          await window.api.userModel.delete(action.payload.id)
+          break
+        case 'UPDATE_AGENT_CONFIG':
+          await window.api.agentConfig.update(action.payload)
+          break
+        case 'UPDATE_SETTINGS':
+          await window.api.settings.update(action.payload)
+          break
+      }
+    } catch (error) {
+      console.error('Failed to sync to backend:', error)
+    }
+  }
 
   const getSuggestionById = (id: string): Suggestion | undefined => {
     return state.suggestions.find((s) => s.suggestionId === id)
@@ -248,13 +364,15 @@ export function DataProvider({ children }: DataProviderProps): React.JSX.Element
   const value: DataContextValue = {
     state,
     dispatch,
+    isLoading,
     getSuggestionById,
     getProjectById,
     getChatById,
     getProjectSuggestions,
     getActiveSuggestions,
     getActiveProjects,
-    getRecentChats
+    getRecentChats,
+    syncToBackend
   }
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

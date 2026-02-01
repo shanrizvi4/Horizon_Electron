@@ -259,6 +259,7 @@ textarea {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   color: var(--text-muted);
+  margin-left: auto;
 }
 
 .sort-toggle::before {

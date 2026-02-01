@@ -13,34 +13,42 @@ interface UseProjectsReturn {
 }
 
 export function useProjects(): UseProjectsReturn {
-  const { state, dispatch, getProjectById, getActiveProjects } = useData()
+  const { state, dispatch, getProjectById, getActiveProjects, syncToBackend } = useData()
 
   const updateProject = useCallback(
     (projectId: number, updates: Partial<Project>) => {
-      dispatch({ type: 'UPDATE_PROJECT', payload: { projectId, updates } })
+      const action = { type: 'UPDATE_PROJECT' as const, payload: { projectId, updates } }
+      dispatch(action)
+      syncToBackend(action)
     },
-    [dispatch]
+    [dispatch, syncToBackend]
   )
 
   const deleteProject = useCallback(
     (projectId: number) => {
-      dispatch({ type: 'DELETE_PROJECT', payload: { projectId } })
+      const action = { type: 'DELETE_PROJECT' as const, payload: { projectId } }
+      dispatch(action)
+      syncToBackend(action)
     },
-    [dispatch]
+    [dispatch, syncToBackend]
   )
 
   const updateProjectTitle = useCallback(
     (projectId: number, title: string) => {
-      dispatch({ type: 'UPDATE_PROJECT', payload: { projectId, updates: { title } } })
+      const action = { type: 'UPDATE_PROJECT' as const, payload: { projectId, updates: { title } } }
+      dispatch(action)
+      syncToBackend(action)
     },
-    [dispatch]
+    [dispatch, syncToBackend]
   )
 
   const updateProjectGoal = useCallback(
     (projectId: number, goal: string) => {
-      dispatch({ type: 'UPDATE_PROJECT', payload: { projectId, updates: { goal } } })
+      const action = { type: 'UPDATE_PROJECT' as const, payload: { projectId, updates: { goal } } }
+      dispatch(action)
+      syncToBackend(action)
     },
-    [dispatch]
+    [dispatch, syncToBackend]
   )
 
   return {
