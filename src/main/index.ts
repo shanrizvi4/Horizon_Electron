@@ -5,9 +5,11 @@ import icon from '../../resources/icon.png?asset'
 
 // Import services and IPC handlers
 import { dataStore } from './services/dataStore'
-import { suggestionService } from './services/suggestionService'
 import { screenCaptureService } from './services/screenCapture'
 import { mouseTrackerService } from './services/mouseTracker'
+import { pipelineService } from './services/pipelineService'
+import { testPipeline } from './services/pipelineTest'
+import { runFullLLMPipeline } from './services/llmPipelineTest'
 import { registerAllIpcHandlers } from './ipc'
 import { setPopupFunctions, notifyPopupVisibilityChange } from './ipc/popup'
 
@@ -18,6 +20,11 @@ let popupWindow: BrowserWindow | null = null
 const POPUP_WIDTH = 400
 const POPUP_HEIGHT = 400
 const POPUP_MARGIN = 10
+const POPUP_PEEK_OFFSET = 10 // How much peeks out when off-screen
+const POPUP_ANIMATION_DURATION = 200 // ms for open animation
+const POPUP_CLOSE_ANIMATION_DURATION = 250 // ms for close animation
+
+let isPopupAnimating = false
 
 function createWindow(): void {
   // Create the browser window.
@@ -65,129 +72,277 @@ function createWindow(): void {
   }
 }
 
-function getPopupPosition(_width: number, height: number): { x: number; y: number } {
+function getPopupFinalPosition(_width: number, height: number): { x: number; y: number } {
   const primaryDisplay = screen.getPrimaryDisplay()
-  const workArea = primaryDisplay.workArea
   const bounds = primaryDisplay.bounds
 
-  console.log('Display bounds:', bounds)
-  console.log('Display workArea:', workArea)
-  console.log('Popup height:', height)
-
-  // Position at absolute bottom-left of screen (may overlap dock)
-  const position = {
+  // Final position: bottom-left corner with margin
+  return {
     x: bounds.x + POPUP_MARGIN,
-    y: bounds.height - height - POPUP_MARGIN  // 1440 - 400 - 10 = 1030
+    y: bounds.height - height - POPUP_MARGIN
   }
-
-  console.log('Popup position:', position)
-  return position
 }
 
-function createPopupWindow(): void {
-  if (popupWindow && !popupWindow.isDestroyed()) {
+function getPopupInitialPosition(width: number, _height: number): { x: number; y: number } {
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const bounds = primaryDisplay.bounds
+
+  // Initial position: off-screen to bottom-left, with just a peek showing
+  // x: mostly off left edge, y: mostly off bottom edge
+  return {
+    x: bounds.x - width + POPUP_PEEK_OFFSET,
+    y: bounds.y + bounds.height - POPUP_PEEK_OFFSET
+  }
+}
+
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3)
+}
+
+function animateBounds(
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  duration: number,
+  onComplete?: () => void
+): void {
+  const startTime = Date.now()
+  const frameInterval = 16 // ~60fps
+
+  const step = (): void => {
+    if (!popupWindow || popupWindow.isDestroyed()) {
+      onComplete?.()
+      return
+    }
+
+    const elapsed = Date.now() - startTime
+    const progress = Math.min(elapsed / duration, 1)
+    const eased = easeOutCubic(progress)
+
+    const x = Math.round(fromX + (toX - fromX) * eased)
+    const y = Math.round(fromY + (toY - fromY) * eased)
+
+    try {
+      popupWindow.setPosition(x, y)
+    } catch (e) {
+      console.error('setPosition error:', e, { x, y })
+    }
+
+    if (progress < 1) {
+      setTimeout(step, frameInterval)
+    } else {
+      onComplete?.()
+    }
+  }
+
+  step()
+}
+
+function animatePopupOpen(onComplete?: () => void): void {
+  if (!popupWindow || popupWindow.isDestroyed()) {
+    onComplete?.()
     return
   }
 
-  // Don't set x/y in constructor - we'll position it before showing
-  popupWindow = new BrowserWindow({
-    width: POPUP_WIDTH,
-    height: POPUP_HEIGHT,
-    show: false,
-    frame: false,
-    transparent: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    movable: true,
-    focusable: true,
-    fullscreenable: false,
-    hasShadow: true,
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
-    ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
+  const initialPos = getPopupInitialPosition(POPUP_WIDTH, POPUP_HEIGHT)
+  const finalPos = getPopupFinalPosition(POPUP_WIDTH, POPUP_HEIGHT)
 
-  // Set window level to float above other windows
-  popupWindow.setAlwaysOnTop(true, 'pop-up-menu')
+  console.log('Animation positions:', { initialPos, finalPos })
 
-  popupWindow.on('closed', () => {
-    popupWindow = null
-    mouseTrackerService.setPopupVisible(false)
-  })
-
-  // Handle focus/blur for auto-close behavior
-  popupWindow.on('blur', () => {
-    // Window lost focus - might want to close
-    // The mouse tracker will handle this via position checking
-  })
-
-  // Load the popup renderer - use query param to indicate popup mode
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    const popupUrl = `${process.env['ELECTRON_RENDERER_URL']}?popup=true`
-    popupWindow.loadURL(popupUrl)
-  } else {
-    popupWindow.loadFile(join(__dirname, '../renderer/index.html'), {
-      query: { popup: 'true' }
-    })
+  // Set initial position BEFORE showing to prevent flash at old position
+  try {
+    popupWindow.setPosition(initialPos.x, initialPos.y)
+  } catch (e) {
+    console.error('Initial setPosition error:', e)
   }
+
+  // Wait a frame for position to apply, then show and animate
+  setTimeout(() => {
+    if (!popupWindow || popupWindow.isDestroyed()) {
+      onComplete?.()
+      return
+    }
+
+    popupWindow.show()
+
+    // Start animation immediately after showing
+    animateBounds(
+      initialPos.x,
+      initialPos.y,
+      finalPos.x,
+      finalPos.y,
+      POPUP_ANIMATION_DURATION,
+      onComplete
+    )
+  }, 16) // One frame delay to ensure position is applied
 }
 
-function showPopupWindow(): void {
+function animatePopupClose(onComplete?: () => void): void {
+  if (!popupWindow || popupWindow.isDestroyed()) {
+    onComplete?.()
+    return
+  }
+
+  const currentPos = popupWindow.getPosition()
+  const initialPos = getPopupInitialPosition(POPUP_WIDTH, POPUP_HEIGHT)
+
+  animateBounds(
+    currentPos[0],
+    currentPos[1],
+    initialPos.x,
+    initialPos.y,
+    POPUP_CLOSE_ANIMATION_DURATION,
+    onComplete
+  )
+}
+
+function createPopupWindow(): Promise<void> {
+  return new Promise((resolve) => {
+    if (popupWindow && !popupWindow.isDestroyed()) {
+      resolve()
+      return
+    }
+
+    const initialPos = getPopupInitialPosition(POPUP_WIDTH, POPUP_HEIGHT)
+
+    // Create window at initial off-screen position
+    popupWindow = new BrowserWindow({
+      x: initialPos.x,
+      y: initialPos.y,
+      width: POPUP_WIDTH,
+      height: POPUP_HEIGHT,
+      show: false,
+      frame: false,
+      transparent: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      movable: true,
+      focusable: true,
+      fullscreenable: false,
+      hasShadow: true,
+      vibrancy: 'under-window',
+      visualEffectState: 'active',
+      ...(process.platform === 'linux' ? { icon } : {}),
+      webPreferences: {
+        preload: join(__dirname, '../preload/index.js'),
+        sandbox: false
+      }
+    })
+
+    // Set window level to float above other windows
+    popupWindow.setAlwaysOnTop(true, 'pop-up-menu')
+
+    popupWindow.on('closed', () => {
+      popupWindow = null
+      mouseTrackerService.setPopupVisible(false)
+    })
+
+    // Resolve when window content is ready
+    popupWindow.once('ready-to-show', () => {
+      resolve()
+    })
+
+    // Handle focus/blur for auto-close behavior
+    popupWindow.on('blur', () => {
+      // Window lost focus - might want to close
+      // The mouse tracker will handle this via position checking
+    })
+
+    // Load the popup renderer - use query param to indicate popup mode
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      const popupUrl = `${process.env['ELECTRON_RENDERER_URL']}?popup=true`
+      popupWindow.loadURL(popupUrl)
+    } else {
+      popupWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+        query: { popup: 'true' }
+      })
+    }
+  })
+}
+
+async function showPopupWindow(): Promise<void> {
   // Check if popup is disabled in settings
   const settings = dataStore.getSettings()
   if (settings.disablePopup) {
     return
   }
 
+  // Prevent double-animation
+  if (isPopupAnimating) {
+    return
+  }
+
+  // Check if popup already exists and is visible - nothing to do
+  if (popupWindow && !popupWindow.isDestroyed() && popupWindow.isVisible()) {
+    return
+  }
+
+  isPopupAnimating = true
+
+  // Clear any pending open timers to prevent duplicate triggers
+  mouseTrackerService.clearOpenDebounceTimer()
+
+  // Mark as visible immediately to prevent re-triggering
+  mouseTrackerService.setPopupVisible(true)
+
+  // Disable auto-close during animation
+  mouseTrackerService.disableAutoCloseTemporarily(POPUP_ANIMATION_DURATION + 500)
+
   if (!popupWindow || popupWindow.isDestroyed()) {
-    createPopupWindow()
+    await createPopupWindow()
   }
 
   if (popupWindow) {
-    const position = getPopupPosition(POPUP_WIDTH, POPUP_HEIGHT)
+    const finalPos = getPopupFinalPosition(POPUP_WIDTH, POPUP_HEIGHT)
 
-    // Show window first (macOS will position it where it wants)
-    popupWindow.show()
-
-    // Then immediately force our position
-    popupWindow.setPosition(position.x, position.y)
-
-    // Debug
-    const actualBounds = popupWindow.getBounds()
-    console.log('Final position:', actualBounds)
-
-    // Update mouse tracker
-    mouseTrackerService.setPopupVisible(true)
+    // Set bounds for mouse tracker immediately
     mouseTrackerService.setPopupBounds({
-      x: position.x,
-      y: position.y,
+      x: finalPos.x,
+      y: finalPos.y,
       width: POPUP_WIDTH,
       height: POPUP_HEIGHT
     })
 
-    // Notify popup renderer
-    notifyPopupVisibilityChange(true)
+    animatePopupOpen(() => {
+      isPopupAnimating = false
+      // Notify popup renderer
+      notifyPopupVisibilityChange(true)
+    })
+  } else {
+    isPopupAnimating = false
+    mouseTrackerService.setPopupVisible(false)
   }
 }
 
 function hidePopupWindow(): void {
-  if (popupWindow && !popupWindow.isDestroyed()) {
-    popupWindow.destroy()
-    popupWindow = null
-    mouseTrackerService.setPopupVisible(false)
-    notifyPopupVisibilityChange(false)
+  if (!popupWindow || popupWindow.isDestroyed()) {
+    return
   }
+
+  // Prevent double-animation
+  if (isPopupAnimating) {
+    return
+  }
+
+  isPopupAnimating = true
+  mouseTrackerService.setPopupVisible(false)
+
+  animatePopupClose(() => {
+    isPopupAnimating = false
+    if (popupWindow && !popupWindow.isDestroyed()) {
+      // Just hide the window, don't destroy it - prevents re-triggering
+      popupWindow.hide()
+    }
+    notifyPopupVisibilityChange(false)
+  })
 }
 
 function resizePopupWindow(width: number, height: number): void {
   console.log('resizePopupWindow called with:', width, height)
   if (popupWindow && !popupWindow.isDestroyed()) {
-    const position = getPopupPosition(width, height)
+    const position = getPopupFinalPosition(width, height)
     popupWindow.setBounds({
       x: position.x,
       y: position.y,
@@ -245,19 +400,52 @@ async function initializeServices(): Promise<void> {
   // 3. Register all IPC handlers
   registerAllIpcHandlers()
 
-  // 4. Start suggestion service (mock generation)
-  suggestionService.start()
-  console.log('Suggestion service started')
+  // 4. Initialize pipeline service (frame analysis, suggestion generation, scoring, deduplication)
+  await pipelineService.initialize()
+  console.log('Pipeline service initialized')
 
   // 5. Start screen capture if enabled in settings
   const settings = dataStore.getSettings()
   if (settings.recordingEnabled) {
     screenCaptureService.start()
     console.log('Screen capture service started')
+
+    // 6. Start pipeline service (processes screenshots through all 5 steps)
+    pipelineService.start()
+    console.log('Pipeline service started')
   }
 
-  // 6. Initialize mouse tracker for popup trigger
+  // 7. Initialize mouse tracker for popup trigger
   initializeMouseTracker()
+
+  // Log pipeline directories for verification
+  console.log('\n=== PIPELINE DIRECTORIES ===')
+  for (const step of pipelineService.getStatus()) {
+    console.log(`${step.step}: ${step.directory}`)
+  }
+  console.log('============================\n')
+
+  // Skip automatic pipeline test when running LLM test
+  if (process.env.TEST_LLM !== '1' && process.env.TEST_LLM !== 'true') {
+    console.log('Running pipeline verification test...')
+    const testResults = await testPipeline(dataStore.getDataDir())
+    const allPassed = testResults.every(r => r.passed)
+    if (!allPassed) {
+      console.error('WARNING: Some pipeline tests failed!')
+    }
+  }
+
+  // Run full LLM pipeline test if TEST_LLM environment variable is set
+  if (process.env.TEST_LLM === '1' || process.env.TEST_LLM === 'true') {
+    console.log('\n*** FULL LLM PIPELINE TEST MODE ***')
+    console.log('Running all 5 steps with REAL Gemini API calls...\n')
+
+    try {
+      await runFullLLMPipeline()
+    } catch (error) {
+      console.error('LLM Pipeline test failed:', error)
+    }
+  }
 
   console.log('All services initialized')
 }
@@ -266,7 +454,7 @@ async function shutdownServices(): Promise<void> {
   console.log('Shutting down services...')
 
   // Stop services
-  suggestionService.stop()
+  pipelineService.stop()
   screenCaptureService.stop()
   mouseTrackerService.stop()
 

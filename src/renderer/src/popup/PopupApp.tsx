@@ -23,10 +23,6 @@ export function PopupApp(): React.JSX.Element {
     setCurrentView('tray')
   }, [])
 
-  const handleOpenInMainApp = useCallback(() => {
-    window.api.popup.openMainApp()
-  }, [])
-
   const handleOpenChatInMainApp = useCallback((chatId: string) => {
     window.api.popup.navigateToChat(chatId)
   }, [])
@@ -34,10 +30,7 @@ export function PopupApp(): React.JSX.Element {
   return (
     <div className="popup-container">
       {currentView === 'tray' ? (
-        <PopupTray
-          onOpenChat={handleOpenChat}
-          onOpenInMainApp={handleOpenInMainApp}
-        />
+        <PopupTray onOpenChat={handleOpenChat} />
       ) : (
         activeChat && (
           <PopupChatView

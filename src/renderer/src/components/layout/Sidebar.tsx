@@ -141,20 +141,8 @@ export function Sidebar(): React.JSX.Element {
           className={`sidebar-recording-btn ${isRecording ? 'recording' : ''}`}
           onClick={() => setIsRecording(!isRecording)}
         >
-          {isRecording ? (
-            <>
-              <span className="recording-indicator" />
-              Recording...
-            </>
-          ) : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 1a3 3 0 00-3 3v4a3 3 0 106 0V4a3 3 0 00-3-3z" />
-                <path d="M4 8a1 1 0 00-2 0 6 6 0 005 5.917V15a1 1 0 102 0v-1.083A6 6 0 0014 8a1 1 0 10-2 0 4 4 0 11-8 0z" />
-              </svg>
-              Start Recording
-            </>
-          )}
+          <span className={`recording-indicator ${isRecording ? 'active' : ''}`} />
+          {isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
       </div>
     </aside>

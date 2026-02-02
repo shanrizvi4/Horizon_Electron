@@ -84,6 +84,14 @@ class MouseTrackerService {
     }, durationMs)
   }
 
+  // Clear any pending open debounce timer to prevent duplicate triggers
+  clearOpenDebounceTimer(): void {
+    if (this.openDebounceTimer) {
+      clearTimeout(this.openDebounceTimer)
+      this.openDebounceTimer = null
+    }
+  }
+
   private checkCursorPosition(): void {
     const cursorPoint = screen.getCursorScreenPoint()
     const primaryDisplay = screen.getPrimaryDisplay()

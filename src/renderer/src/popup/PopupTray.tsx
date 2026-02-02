@@ -1,53 +1,34 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { PopupHeader } from './PopupHeader'
 import { PopupSuggestionCard } from './PopupSuggestionCard'
 import { useSuggestions } from '../hooks/useSuggestions'
-import { useChat } from '../hooks/useChat'
 import { useData } from '../context/DataContext'
-import type { Chat, SortMethod } from '../types'
+import type { Chat } from '../types'
 
 interface PopupTrayProps {
   onOpenChat: (chat: Chat) => void
-  onOpenInMainApp: () => void
 }
 
 const TIME_GROUP_ORDER = ['Now', 'Last Hour', 'Today', 'Yesterday', 'This Week', 'Earlier']
 
-export function PopupTray({ onOpenChat, onOpenInMainApp }: PopupTrayProps): React.JSX.Element {
-  const [sortMethod, setSortMethod] = useState<SortMethod>('recent')
+export function PopupTray({ onOpenChat }: PopupTrayProps): React.JSX.Element {
   const [displayCount, setDisplayCount] = useState(10)
   const { isLoading } = useData()
   const { activeSuggestions, sortSuggestions, groupSuggestionsByTime } = useSuggestions()
-  const { createChat, getChat } = useChat()
 
-  // Sort suggestions
+  // Sort suggestions by recent (default)
   const sortedSuggestions = useMemo(() => {
-    return sortSuggestions(activeSuggestions, sortMethod)
-  }, [activeSuggestions, sortSuggestions, sortMethod])
+    return sortSuggestions(activeSuggestions, 'recent')
+  }, [activeSuggestions, sortSuggestions])
 
   // Get displayed suggestions (infinite scroll)
   const displayedSuggestions = useMemo(() => {
     return sortedSuggestions.slice(0, displayCount)
   }, [sortedSuggestions, displayCount])
 
-  // Group by time if sorting by recent
+  // Group by time
   const groupedSuggestions = useMemo(() => {
-    if (sortMethod !== 'recent') return null
     return groupSuggestionsByTime(displayedSuggestions)
-  }, [displayedSuggestions, groupSuggestionsByTime, sortMethod])
-
-  const handleSortChange = useCallback((method: SortMethod) => {
-    setSortMethod(method)
-    setDisplayCount(10) // Reset count when changing sort
-  }, [])
-
-  const handleNewChat = useCallback(() => {
-    const chatId = createChat({ title: 'New Chat' })
-    const chat = getChat(chatId)
-    if (chat) {
-      onOpenChat(chat)
-    }
-  }, [createChat, getChat, onOpenChat])
+  }, [displayedSuggestions, groupSuggestionsByTime])
 
   const handleLoadMore = useCallback(() => {
     if (displayCount < sortedSuggestions.length) {
@@ -69,18 +50,6 @@ export function PopupTray({ onOpenChat, onOpenInMainApp }: PopupTrayProps): Reac
 
   return (
     <div className="popup-tray">
-      {/* Draggable indicator */}
-      <div className="popup-drag-handle">
-        <div className="popup-drag-indicator" />
-      </div>
-
-      <PopupHeader
-        sortMethod={sortMethod}
-        onSortChange={handleSortChange}
-        onNewChat={handleNewChat}
-        onOpenInMainApp={onOpenInMainApp}
-      />
-
       <div className="popup-suggestions-scroll" onScroll={handleScroll}>
         {isLoading ? (
           <div className="popup-empty-state">
@@ -94,7 +63,7 @@ export function PopupTray({ onOpenChat, onOpenInMainApp }: PopupTrayProps): Reac
             <p>No active suggestions</p>
             <span>New suggestions will appear here</span>
           </div>
-        ) : sortMethod === 'recent' && groupedSuggestions ? (
+        ) : groupedSuggestions ? (
           // Render grouped by time
           TIME_GROUP_ORDER.map((groupName) => {
             const groupSuggestions = groupedSuggestions.get(groupName)
@@ -113,16 +82,7 @@ export function PopupTray({ onOpenChat, onOpenInMainApp }: PopupTrayProps): Reac
               </div>
             )
           })
-        ) : (
-          // Render flat list (importance sort)
-          displayedSuggestions.map((suggestion) => (
-            <PopupSuggestionCard
-              key={suggestion.suggestionId}
-              suggestion={suggestion}
-              onOpenChat={onOpenChat}
-            />
-          ))
-        )}
+        ) : null}
 
         {/* Infinite scroll trigger */}
         {displayCount < sortedSuggestions.length && (
