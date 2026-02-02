@@ -1,9 +1,9 @@
 import React from 'react'
 import type { Suggestion } from '../../types'
 import { useChat } from '../../hooks/useChat'
+import { useSuggestions } from '../../hooks/useSuggestions'
 // Unused imports kept for future use when commented code is enabled
 // import { useProjects } from '../../hooks/useProjects'
-// import { useSuggestions } from '../../hooks/useSuggestions'
 // import { useNavigation } from '../../context/NavigationContext'
 // import { SuggestionActions } from './SuggestionActions'
 // import { ThumbsUpModal } from '../modals/ThumbsUpModal'
@@ -22,11 +22,17 @@ export function SuggestionCard({
   void _showProject
 
   const { openChatForSuggestion } = useChat()
+  const { dismissSuggestion } = useSuggestions()
   const hasExistingChat = suggestion.executionOutput !== ''
 
   const handleChatClick = (e: React.MouseEvent): void => {
     e.stopPropagation()
     openChatForSuggestion(suggestion)
+  }
+
+  const handleDismiss = (e: React.MouseEvent): void => {
+    e.stopPropagation()
+    dismissSuggestion(suggestion.suggestionId)
   }
 
   return (
@@ -71,6 +77,12 @@ export function SuggestionCard({
               <path d="M2 3a1 1 0 011-1h8a1 1 0 011 1v6a1 1 0 01-1 1H6l-3 2V10H3a1 1 0 01-1-1V3z" />
             </svg>
             {hasExistingChat ? 'Open Chat' : 'Start Chat'}
+          </button>
+          <button className="suggestion-card-remove-btn" onClick={handleDismiss}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <path d="M5.5 1a.5.5 0 00-.5.5V2H2.5a.5.5 0 000 1h.441l.443 8.883A1.5 1.5 0 004.88 13h4.24a1.5 1.5 0 001.496-1.117L11.059 3h.441a.5.5 0 000-1H9v-.5a.5.5 0 00-.5-.5h-3zM5 5.5a.5.5 0 011 0v5a.5.5 0 01-1 0v-5zm3 0a.5.5 0 011 0v5a.5.5 0 01-1 0v-5z" />
+            </svg>
+            Remove
           </button>
           {/* <div className="suggestion-card-support">
               <div className="suggestion-card-support-bar">
