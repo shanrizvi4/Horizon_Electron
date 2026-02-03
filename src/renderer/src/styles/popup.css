@@ -75,7 +75,26 @@
 .popup-suggestions-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-y: overlay;
   padding: 12px 15px 20px 15px;
+}
+
+/* Custom scrollbar for popup */
+.popup-suggestions-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popup-suggestions-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.popup-suggestions-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.popup-suggestions-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Time Group */
@@ -98,7 +117,7 @@
 /* Suggestion Card - matching main app style */
 .popup-suggestion-card {
   position: relative;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: none;
@@ -129,18 +148,16 @@
   transition: background var(--transition-normal);
 }
 
-.popup-suggestion-card:hover {
-  background-color: rgba(255, 255, 255, 0.12);
+.popup-suggestion-card.hovered {
+  background-color: rgba(255, 255, 255, 0.10);
   padding-bottom: 54px;
 }
 
-.popup-suggestion-card:hover::before {
+.popup-suggestion-card.hovered::before {
   background: rgba(255, 255, 255, 0.18);
 }
 
-.popup-card-content {
-  /* Wrapper for title/desc */
-}
+/* .popup-card-content - Wrapper for title/desc, no styles needed */
 
 .popup-card-title {
   font-family: var(--font-family);
@@ -166,7 +183,7 @@
   transition: all var(--transition-normal);
 }
 
-.popup-suggestion-card:hover .popup-card-description {
+.popup-suggestion-card.hovered .popup-card-description {
   -webkit-line-clamp: unset;
   line-clamp: unset;
   overflow: visible;
@@ -180,13 +197,17 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: bottom var(--transition-normal);
+  transition: bottom var(--transition-normal), opacity var(--transition-normal), visibility var(--transition-normal);
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
 }
 
-.popup-suggestion-card:hover .popup-card-footer {
+.popup-suggestion-card.hovered .popup-card-footer {
   bottom: 12px;
   pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
 }
 
 .popup-card-chat-btn {

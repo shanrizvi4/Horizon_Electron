@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import type { Suggestion, Chat } from '../types'
 import { useData } from '../context/DataContext'
 import { useSuggestions } from '../hooks/useSuggestions'
@@ -16,6 +16,19 @@ export function PopupSuggestionCard({
   const { state } = useData()
   const { dismissSuggestion } = useSuggestions()
   const { createChat, addMessage, getChat } = useChat()
+  const [isHovered, setIsHovered] = useState(false)
+  const [hasMouseMoved, setHasMouseMoved] = useState(false)
+
+  // Reset hover state when popup becomes visible
+  useEffect(() => {
+    const unsubscribe = window.api.popup.onVisibilityChange((visible) => {
+      if (visible) {
+        setIsHovered(false)
+        setHasMouseMoved(false)
+      }
+    })
+    return unsubscribe
+  }, [])
 
   // Check if chat already exists for this suggestion
   const existingChat = state.chats.find(
@@ -68,8 +81,24 @@ export function PopupSuggestionCard({
     dismissSuggestion(suggestion.suggestionId)
   }
 
+  const handleMouseMove = (): void => {
+    if (!hasMouseMoved) {
+      setHasMouseMoved(true)
+      setIsHovered(true)
+    }
+  }
+
+  const handleMouseLeave = (): void => {
+    setIsHovered(false)
+    setHasMouseMoved(false)
+  }
+
   return (
-    <div className="popup-suggestion-card">
+    <div
+      className={`popup-suggestion-card ${isHovered ? 'hovered' : ''}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
       {/* Content */}
       <div className="popup-card-content">
         <h3 className="popup-card-title">{suggestion.title}</h3>

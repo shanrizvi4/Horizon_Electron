@@ -164,7 +164,7 @@ function animatePopupOpen(onComplete?: () => void): void {
       return
     }
 
-    popupWindow.show()
+    popupWindow.showInactive()
 
     // Start animation immediately after showing
     animateBounds(
