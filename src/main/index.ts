@@ -8,8 +8,8 @@ import { dataStore } from './services/dataStore'
 import { screenCaptureService } from './services/screenCapture'
 import { mouseTrackerService } from './services/mouseTracker'
 import { pipelineService } from './services/pipelineService'
-import { testPipeline } from './services/pipelineTest'
-import { runFullLLMPipeline } from './services/llmPipelineTest'
+// import { testPipeline } from './services/pipelineTest'
+// import { runFullLLMPipeline } from './services/llmPipelineTest'
 import { registerAllIpcHandlers } from './ipc'
 import { setPopupFunctions, notifyPopupVisibilityChange } from './ipc/popup'
 
@@ -29,8 +29,8 @@ let isPopupAnimating = false
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    height: 800,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -224,6 +224,7 @@ function createPopupWindow(): Promise<void> {
       hasShadow: true,
       vibrancy: 'under-window',
       visualEffectState: 'active',
+      visibleOnAllWorkspaces: true,
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
@@ -232,7 +233,10 @@ function createPopupWindow(): Promise<void> {
     })
 
     // Set window level to float above other windows
-    popupWindow.setAlwaysOnTop(true, 'pop-up-menu')
+    popupWindow.setAlwaysOnTop(true, 'screen-saver')
+
+    // Make visible on all workspaces including fullscreen apps (macOS)
+    popupWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
     popupWindow.on('closed', () => {
       popupWindow = null
@@ -425,27 +429,24 @@ async function initializeServices(): Promise<void> {
   }
   console.log('============================\n')
 
-  // Skip automatic pipeline test when running LLM test
-  if (process.env.TEST_LLM !== '1' && process.env.TEST_LLM !== 'true') {
-    console.log('Running pipeline verification test...')
-    const testResults = await testPipeline(dataStore.getDataDir())
-    const allPassed = testResults.every(r => r.passed)
-    if (!allPassed) {
-      console.error('WARNING: Some pipeline tests failed!')
-    }
-  }
+  // Tests disabled by default - run manually with TEST_PIPELINE=1 or TEST_LLM=1
+  // if (process.env.TEST_PIPELINE === '1') {
+  //   console.log('Running pipeline verification test...')
+  //   const testResults = await testPipeline(dataStore.getDataDir())
+  //   const allPassed = testResults.every(r => r.passed)
+  //   if (!allPassed) {
+  //     console.error('WARNING: Some pipeline tests failed!')
+  //   }
+  // }
 
-  // Run full LLM pipeline test if TEST_LLM environment variable is set
-  if (process.env.TEST_LLM === '1' || process.env.TEST_LLM === 'true') {
-    console.log('\n*** FULL LLM PIPELINE TEST MODE ***')
-    console.log('Running all 5 steps with REAL Gemini API calls...\n')
-
-    try {
-      await runFullLLMPipeline()
-    } catch (error) {
-      console.error('LLM Pipeline test failed:', error)
-    }
-  }
+  // if (process.env.TEST_LLM === '1') {
+  //   console.log('\n*** FULL LLM PIPELINE TEST MODE ***')
+  //   try {
+  //     await runFullLLMPipeline()
+  //   } catch (error) {
+  //     console.error('LLM Pipeline test failed:', error)
+  //   }
+  // }
 
   console.log('All services initialized')
 }

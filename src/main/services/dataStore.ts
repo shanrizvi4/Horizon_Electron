@@ -20,7 +20,7 @@ const getDefaultState = (): AppState => ({
   },
   settings: {
     notificationFrequency: 5,
-    recordingEnabled: true,
+    recordingEnabled: false,
     disablePopup: false
   },
   lastUpdateId: 0,

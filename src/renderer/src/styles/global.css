@@ -285,8 +285,6 @@ textarea {
 
 .sort-toggle-btn.active {
   color: #D6CCBA;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .sort-toggle-divider {
@@ -316,6 +314,31 @@ textarea {
 ::selection {
   background-color: rgba(124, 154, 184, 0.3);
   color: var(--text-heading);
+}
+
+/* Liquid Glass Border Effect */
+.glass-border {
+  position: relative;
+  border: none !important;
+}
+
+.glass-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Utilities */

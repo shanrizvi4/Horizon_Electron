@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { SidebarButton } from './SidebarButton'
 import { SidebarSection } from './SidebarSection'
 import { useAppNavigation } from '../../hooks/useNavigation'
-import { useProjects } from '../../hooks/useProjects'
+// import { useProjects } from '../../hooks/useProjects'
 import { useChat } from '../../hooks/useChat'
 import type { PageType } from '../../types'
 
@@ -16,15 +16,15 @@ const NAV_ITEMS: { page: PageType; label: string; icon: React.ReactNode }[] = [
       </svg>
     )
   },
-  {
-    page: 'projects',
-    label: 'Projects',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-      </svg>
-    )
-  },
+  // {
+  //   page: 'projects',
+  //   label: 'Projects',
+  //   icon: (
+  //     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+  //       <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+  //     </svg>
+  //   )
+  // },
   {
     page: 'userModel',
     label: 'Memory',
@@ -63,10 +63,25 @@ const NAV_ITEMS: { page: PageType; label: string; icon: React.ReactNode }[] = [
 ]
 
 export function Sidebar(): React.JSX.Element {
-  const { currentPage, selectedChatId, navigateTo, openProject, openChat } = useAppNavigation()
-  const { activeProjects } = useProjects()
+  const { currentPage, selectedChatId, navigateTo, openChat } = useAppNavigation()
+  // const { activeProjects } = useProjects()
   const { recentChats, createNewChat } = useChat()
   const [isRecording, setIsRecording] = useState(false)
+
+  // Sync recording state with backend
+  useEffect(() => {
+    window.api.recording.getStatus().then(setIsRecording)
+    const unsubscribe = window.api.recording.onStatusChange(setIsRecording)
+    return unsubscribe
+  }, [])
+
+  const handleRecordingToggle = async (): Promise<void> => {
+    if (isRecording) {
+      await window.api.recording.stop()
+    } else {
+      await window.api.recording.start()
+    }
+  }
 
   const activeIndex = useMemo(() => {
     if (selectedChatId) return -1
@@ -95,7 +110,7 @@ export function Sidebar(): React.JSX.Element {
           ))}
         </div>
 
-        <SidebarSection title="Active Projects">
+        {/* <SidebarSection title="Active Projects">
           {activeProjects.map((project) => (
             <div
               key={project.projectId}
@@ -110,7 +125,7 @@ export function Sidebar(): React.JSX.Element {
               No active projects
             </div>
           )}
-        </SidebarSection>
+        </SidebarSection> */}
 
         <SidebarSection title="Recent Chats">
           {recentChats.map((chat) => (
@@ -139,7 +154,7 @@ export function Sidebar(): React.JSX.Element {
         </button>
         <button
           className={`sidebar-recording-btn ${isRecording ? 'recording' : ''}`}
-          onClick={() => setIsRecording(!isRecording)}
+          onClick={handleRecordingToggle}
         >
           <span className={`recording-indicator ${isRecording ? 'active' : ''}`} />
           {isRecording ? 'Stop Recording' : 'Start Recording'}
