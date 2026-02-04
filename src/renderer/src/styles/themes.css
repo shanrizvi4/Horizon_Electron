@@ -1,0 +1,186 @@
+/*
+ * GUMBO Theme System
+ *
+ * Three themes available:
+ * - "dusk" (default) - The original blue/slate theme
+ * - "light" - Clean light mode
+ * - "dark" - Deep dark mode
+ *
+ * To switch themes, set data-theme attribute on <html>:
+ *   document.documentElement.setAttribute('data-theme', 'light')
+ */
+
+/* ===========================================
+   DUSK THEME (Default) - Blue/Slate
+   =========================================== */
+:root,
+[data-theme="dusk"] {
+  /* Main background */
+  --theme-bg-main: #46576B;
+
+  /* Glass overlay RGB (for use with rgba) */
+  --glass-rgb: 255, 255, 255;
+
+  /* Hover overlay RGB (same as glass for dark themes) */
+  --hover-rgb: 255, 255, 255;
+  --hover-opacity: 0.04;
+
+  /* Text colors */
+  --theme-text-heading: #D6CCBA;
+  --theme-text-primary: #D6CCBA;
+  --theme-text-secondary: #B8AE9C;
+  --theme-text-muted: #9A9080;
+  --theme-text-disabled: #7C7264;
+
+  /* Accent colors */
+  --theme-accent-primary: #7C9AB8;
+  --theme-accent-primary-hover: #93AEC9;
+  --theme-accent-primary-light: rgba(124, 154, 184, 0.2);
+  --theme-accent-primary-tint: rgba(124, 154, 184, 0.35);
+  --theme-accent-success: #7BA57B;
+  --theme-accent-success-light: rgba(123, 165, 123, 0.2);
+  --theme-accent-warning: #C9A86C;
+  --theme-accent-warning-light: rgba(201, 168, 108, 0.2);
+  --theme-accent-error: #C47A6C;
+  --theme-accent-error-light: rgba(196, 122, 108, 0.2);
+
+  /* Base colors */
+  --theme-base: #46576B;
+  --theme-base-light: #5a6d82;
+  --theme-base-dark: #374151;
+
+  /* Specific button backgrounds (keep original values) */
+  --theme-btn-primary: rgba(124, 154, 184, 0.7);
+  --theme-btn-primary-hover: rgba(124, 154, 184, 0.85);
+  --theme-btn-blue: rgba(40, 48, 61, 0.75);
+  --theme-btn-blue-hover: rgba(40, 48, 61, 0.9);
+  --theme-btn-green: rgba(53, 90, 53, 0.75);
+  --theme-btn-green-hover: rgba(53, 90, 53, 0.9);
+  --theme-btn-red: rgb(134, 21, 21);
+  --theme-btn-red-hover: rgb(154, 30, 30);
+  --theme-btn-red-light: rgba(134, 21, 21, 0.65);
+  --theme-btn-red-light-hover: rgba(134, 21, 21, 0.8);
+
+  /* Button text (always light on dark buttons) */
+  --theme-btn-text: #D6CCBA;
+
+  /* Text shadow */
+  --theme-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --theme-text-shadow-strong: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ===========================================
+   LIGHT THEME - Clean & Bright
+   =========================================== */
+[data-theme="light"] {
+  /* Main background */
+  --theme-bg-main: #f1f1e6;
+
+  /* Glass overlay RGB (black for light theme) */
+  --glass-rgb: 0, 0, 0;
+
+  /* Hover overlay - disabled for light theme */
+  --hover-rgb: 0, 0, 0;
+  --hover-opacity: 0;
+
+  /* Text colors */
+  --theme-text-heading: #2D3748;
+  --theme-text-primary: #374151;
+  --theme-text-secondary: #5A6472;
+  --theme-text-muted: #8896A6;
+  --theme-text-disabled: #B0BCC8;
+
+  /* Accent colors */
+  --theme-accent-primary: #5A7A9A;
+  --theme-accent-primary-hover: #4A6A8A;
+  --theme-accent-primary-light: rgba(90, 122, 154, 0.2);
+  --theme-accent-primary-tint: rgba(90, 122, 154, 0.35);
+  --theme-accent-success: #5A8A5A;
+  --theme-accent-success-light: rgba(90, 138, 90, 0.15);
+  --theme-accent-warning: #B8963C;
+  --theme-accent-warning-light: rgba(184, 150, 60, 0.15);
+  --theme-accent-error: #B85A4A;
+  --theme-accent-error-light: rgba(184, 90, 74, 0.15);
+
+  /* Base colors */
+  --theme-base: #F5F5F0;
+  --theme-base-light: #FFFFFF;
+  --theme-base-dark: #E8E8E3;
+
+  /* Specific button backgrounds */
+  --theme-btn-primary: rgba(90, 122, 154, 0.7);
+  --theme-btn-primary-hover: rgba(90, 122, 154, 0.85);
+  --theme-btn-blue: rgba(70, 87, 107, 0.85);
+  --theme-btn-blue-hover: rgba(70, 87, 107, 0.95);
+  --theme-btn-green: rgba(90, 138, 90, 0.85);
+  --theme-btn-green-hover: rgba(90, 138, 90, 0.95);
+  --theme-btn-red: rgb(184, 90, 74);
+  --theme-btn-red-hover: rgb(164, 70, 54);
+  --theme-btn-red-light: rgba(184, 90, 74, 0.7);
+  --theme-btn-red-light-hover: rgba(184, 90, 74, 0.85);
+
+  /* Button text (always light on dark buttons) */
+  --theme-btn-text: #FFFFFF;
+
+  /* Text shadow - none for light mode */
+  --theme-text-shadow: none;
+  --theme-text-shadow-strong: none;
+}
+
+/* ===========================================
+   DARK THEME - Deep & Rich
+   =========================================== */
+[data-theme="dark"] {
+  /* Main background */
+  --theme-bg-main: #2a303d;
+
+  /* Glass overlay RGB */
+  --glass-rgb: 255, 255, 255;
+
+  /* Hover overlay RGB (same as glass for dark themes) */
+  --hover-rgb: 255, 255, 255;
+  --hover-opacity: 0.04;
+
+  /* Text colors */
+  --theme-text-heading: #E8E4DC;
+  --theme-text-primary: #D8D4CC;
+  --theme-text-secondary: #A8A49C;
+  --theme-text-muted: #787470;
+  --theme-text-disabled: #585450;
+
+  /* Accent colors */
+  --theme-accent-primary: #8AACD0;
+  --theme-accent-primary-hover: #9CBCE0;
+  --theme-accent-primary-light: rgba(138, 172, 208, 0.2);
+  --theme-accent-primary-tint: rgba(138, 172, 208, 0.35);
+  --theme-accent-success: #8BC08B;
+  --theme-accent-success-light: rgba(139, 192, 139, 0.2);
+  --theme-accent-warning: #D9B86C;
+  --theme-accent-warning-light: rgba(217, 184, 108, 0.2);
+  --theme-accent-error: #D4887A;
+  --theme-accent-error-light: rgba(212, 136, 122, 0.2);
+
+  /* Base colors */
+  --theme-base: #1A1D23;
+  --theme-base-light: #252A33;
+  --theme-base-dark: #12141A;
+
+  /* Specific button backgrounds */
+  --theme-btn-primary: rgba(138, 172, 208, 0.7);
+  --theme-btn-primary-hover: rgba(138, 172, 208, 0.85);
+  --theme-btn-blue: rgba(60, 70, 90, 0.8);
+  --theme-btn-blue-hover: rgba(60, 70, 90, 0.95);
+  --theme-btn-green: rgba(60, 100, 60, 0.7);
+  --theme-btn-green-hover: rgba(60, 100, 60, 0.85);
+  --theme-btn-red: rgb(150, 50, 50);
+  --theme-btn-red-hover: rgb(170, 60, 60);
+  --theme-btn-red-light: rgba(150, 50, 50, 0.65);
+  --theme-btn-red-light-hover: rgba(150, 50, 50, 0.8);
+
+  /* Button text (always light on dark buttons) */
+  --theme-btn-text: #E8E4DC;
+
+  /* Text shadow */
+  --theme-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --theme-text-shadow-strong: 0 1px 3px rgba(0, 0, 0, 0.2);
+}

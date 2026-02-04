@@ -69,10 +69,10 @@
 .page-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
-  color: #D6CCBA;
+  color: var(--text-heading);
   margin-bottom: var(--spacing-sm);
   letter-spacing: -0.02em;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  text-shadow: var(--text-shadow-strong);
 }
 
 .page-subtitle {
@@ -164,8 +164,8 @@
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-medium);
   margin-bottom: var(--spacing-sm);
-  color: #D6CCBA;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  color: var(--text-heading);
+  text-shadow: var(--text-shadow);
 }
 
 .empty-state-description {
@@ -190,13 +190,13 @@
 
 .list-item {
   padding: var(--spacing-lg);
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(var(--glass-rgb), 0.08);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--glass-rgb), 0.08);
   transition: all var(--transition-fast);
 }
 
 .list-item:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(var(--glass-rgb), 0.12);
+  border-color: rgba(var(--glass-rgb), 0.15);
 }

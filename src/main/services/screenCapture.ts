@@ -9,7 +9,7 @@ class ScreenCaptureService {
   private activityDebounceTimeout: NodeJS.Timeout | null = null
   private statusListeners: Set<(isRecording: boolean) => void> = new Set()
 
-  private readonly CAPTURE_INTERVAL_MS = 30000 // 30 seconds
+  private readonly CAPTURE_INTERVAL_MS = 10000 // 10 seconds (for testing)
   private readonly ACTIVITY_DEBOUNCE_MS = 3000 // 3 seconds after activity
 
   isActive(): boolean {
@@ -80,12 +80,9 @@ class ScreenCaptureService {
   }
 
   private async captureScreen(): Promise<void> {
-    // Skip if our app window is focused
+    // Log focus state but don't skip (for testing)
     const focusedWindow = BrowserWindow.getFocusedWindow()
-    if (focusedWindow) {
-      console.log('Skipping capture - app window is focused')
-      return
-    }
+    console.log(`Attempting capture... (app focused: ${focusedWindow ? 'yes' : 'no'})`)
 
     try {
       // Get the primary display
@@ -99,16 +96,18 @@ class ScreenCaptureService {
       })
 
       if (sources.length === 0) {
-        console.log('No screen sources available')
+        console.log('No screen sources available - check Screen Recording permission in System Settings')
         return
       }
+
+      console.log(`Found ${sources.length} screen source(s)`)
 
       // Use the primary screen (first source)
       const source = sources[0]
       const thumbnail = source.thumbnail
 
       if (thumbnail.isEmpty()) {
-        console.log('Empty thumbnail captured')
+        console.log('Empty thumbnail - Screen Recording permission may be denied')
         return
       }
 

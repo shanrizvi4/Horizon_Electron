@@ -20,12 +20,26 @@ const getDefaultState = (): AppState => ({
   },
   settings: {
     notificationFrequency: 5,
-    recordingEnabled: false,
+    recordingEnabled: false,  // Default to OFF - user must explicitly start
     disablePopup: false
   },
   lastUpdateId: 0,
   lastProcessedTimestamp: Date.now()
 })
+
+// Get the project root directory (GUMBO_Electron)
+function getProjectDataDir(): string {
+  // In development, __dirname is in out/main, so go up to project root
+  // In production, use app.getPath but still prefer local data folder
+  const isDev = !app.isPackaged
+  if (isDev) {
+    // Go from out/main to project root
+    return path.join(__dirname, '..', '..', 'data')
+  } else {
+    // In production, use app path
+    return path.join(app.getAppPath(), 'data')
+  }
+}
 
 class DataStore {
   private state: AppState
@@ -36,9 +50,10 @@ class DataStore {
   private updateListeners: Set<(state: AppState) => void> = new Set()
 
   constructor() {
-    this.dataDir = path.join(app.getPath('userData'), 'data')
+    this.dataDir = getProjectDataDir()
     this.stateFilePath = path.join(this.dataDir, 'state.json')
     this.state = getDefaultState()
+    console.log(`DataStore initialized with dataDir: ${this.dataDir}`)
   }
 
   async initialize(): Promise<void> {

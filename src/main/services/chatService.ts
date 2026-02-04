@@ -1,5 +1,6 @@
 import type { Chat } from '../types'
 import { dataStore } from './dataStore'
+import { configService } from './config'
 
 // Gemini API configuration
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent'
@@ -38,9 +39,10 @@ class ChatService {
   }
 
   getApiKey(): string | null {
-    // Try to get from environment first
+    // Try to get from config service (checks env var first, then config.json)
     if (!this.apiKey) {
-      this.apiKey = process.env.GEMINI_API_KEY || null
+      const key = configService.getGeminiApiKey()
+      this.apiKey = (key && key !== 'your_api_key_here') ? key : null
     }
     return this.apiKey
   }

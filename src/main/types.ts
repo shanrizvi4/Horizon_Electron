@@ -137,6 +137,7 @@ export const IPC_CHANNELS = {
   RECORDING_STOP: 'recording:stop',
   RECORDING_GET_STATUS: 'recording:getStatus',
   RECORDING_STATUS_CHANGE: 'recording:statusChange',
+  RECORDING_TEST_LLM: 'recording:testLLM',  // Single frame LLM test
 
   // State sync
   STATE_GET_ALL: 'state:getAll',

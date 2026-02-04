@@ -1,62 +1,72 @@
+@import './themes.css';
+
+/*
+ * GUMBO Design System Variables
+ * Theme colors are defined in themes.css
+ */
+
 :root {
+  /* ===========================================
+     COLORS - Mapped from active theme
+     =========================================== */
+
   /* Base colors */
-  --color-base: #46576B;
-  --color-base-light: #5a6d82;
-  --color-base-dark: #374151;
-  --color-cream: #D6CCBA;
-  --color-cream-muted: #B8AE9C;
+  --color-base: var(--theme-base);
+  --color-base-light: var(--theme-base-light);
+  --color-base-dark: var(--theme-base-dark);
+  --color-cream: var(--theme-text-heading);
+  --color-cream-muted: var(--theme-text-secondary);
 
-  /* Background colors - layered opacity system */
-  --bg-main: #46576B;
-  --bg-sidebar: rgba(255, 255, 255, 0.1);
-  --bg-card: rgba(255, 255, 255, 0.1);
-  --bg-card-hover: rgba(255, 255, 255, 0.15);
-  --bg-active: rgba(255, 255, 255, 0.2);
-  --bg-input: rgba(255, 255, 255, 0.08);
-  --bg-input-hover: rgba(255, 255, 255, 0.12);
-  --bg-input-focus: rgba(255, 255, 255, 0.15);
+  /* Background */
+  --bg-main: var(--theme-bg-main);
+  --bg-active: rgba(var(--glass-rgb), 0.2);
 
-  /* Text colors - beige tones */
-  --text-heading: #D6CCBA;
-  --text-primary: #D6CCBA;
-  --text-secondary: #B8AE9C;
-  --text-muted: #9A9080;
-  --text-disabled: #7C7264;
-  --text-on-accent: #D6CCBA;
+  /* Text colors */
+  --text-heading: var(--theme-text-heading);
+  --text-primary: var(--theme-text-primary);
+  --text-secondary: var(--theme-text-secondary);
+  --text-muted: var(--theme-text-muted);
+  --text-disabled: var(--theme-text-disabled);
+  --text-on-accent: var(--theme-text-heading);
 
-  /* Button colors */
-  --btn-primary: #374151;
-  --btn-primary-hover: #4B5563;
-  --btn-primary-active: #2D3748;
-  --btn-secondary: rgba(255, 255, 255, 0.1);
-  --btn-secondary-hover: rgba(255, 255, 255, 0.18);
-  --btn-secondary-active: rgba(255, 255, 255, 0.25);
-  --btn-ghost-hover: rgba(255, 255, 255, 0.08);
-  --btn-ghost-active: rgba(255, 255, 255, 0.12);
+  /* Accent colors */
+  --accent-primary: var(--theme-accent-primary);
+  --accent-primary-hover: var(--theme-accent-primary-hover);
+  --accent-primary-light: var(--theme-accent-primary-light);
+  --accent-primary-tint: var(--theme-accent-primary-tint);
+  --accent-success: var(--theme-accent-success);
+  --accent-success-light: var(--theme-accent-success-light);
+  --accent-warning: var(--theme-accent-warning);
+  --accent-warning-light: var(--theme-accent-warning-light);
+  --accent-error: var(--theme-accent-error);
+  --accent-error-light: var(--theme-accent-error-light);
 
-  /* Accent colors - muted to match aesthetic */
-  --accent-primary: #7C9AB8;
-  --accent-primary-hover: #93AEC9;
-  --accent-success: #7BA57B;
-  --accent-success-light: rgba(123, 165, 123, 0.2);
-  --accent-warning: #C9A86C;
-  --accent-warning-light: rgba(201, 168, 108, 0.2);
-  --accent-error: #C47A6C;
-  --accent-error-light: rgba(196, 122, 108, 0.2);
+  /* Borders */
+  --border-subtle: rgba(var(--glass-rgb), 0.08);
+  --border-medium: rgba(var(--glass-rgb), 0.15);
+  --border-strong: rgba(var(--glass-rgb), 0.25);
+  --border-focus: var(--theme-accent-primary);
 
-  /* Borders - white opacity for subtle definition */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.15);
-  --border-strong: rgba(255, 255, 255, 0.25);
-  --border-focus: rgba(124, 154, 184, 0.5);
-
-  /* Shadows - darker for depth on dark bg */
+  /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.05);
 
-  /* Spacing - generous for breathing room */
+  /* Button text */
+  --btn-text: var(--theme-btn-text);
+
+  /* Text shadows */
+  --text-shadow: var(--theme-text-shadow);
+  --text-shadow-strong: var(--theme-text-shadow-strong);
+
+  /* Legacy mappings */
+  --color-blue-muted: var(--theme-accent-primary);
+  --btn-ghost-hover: rgba(var(--glass-rgb), 0.08);
+  --btn-ghost-active: rgba(var(--glass-rgb), 0.12);
+
+  /* ===========================================
+     SPACING
+     =========================================== */
   --spacing-xs: 6px;
   --spacing-sm: 12px;
   --spacing-md: 20px;
@@ -64,14 +74,18 @@
   --spacing-xl: 48px;
   --spacing-2xl: 64px;
 
-  /* Border radius - softer, more rounded */
+  /* ===========================================
+     BORDER RADIUS
+     =========================================== */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
   --radius-full: 9999px;
 
-  /* Typography - Outfit font */
+  /* ===========================================
+     TYPOGRAPHY
+     =========================================== */
   --font-family: 'Outfit', sans-serif;
   --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-family-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
@@ -84,22 +98,24 @@
   --font-size-xl: 28px;
   --font-size-2xl: 36px;
 
-  /* Line heights - relaxed for readability */
   --line-height-tight: 1.3;
   --line-height-normal: 1.6;
   --line-height-relaxed: 1.8;
 
-  /* Font weights */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
-  /* Transitions */
+  /* ===========================================
+     TRANSITIONS
+     =========================================== */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow: 400ms ease;
 
-  /* Layout */
+  /* ===========================================
+     LAYOUT
+     =========================================== */
   --sidebar-width: 260px;
   --content-max-width: 720px;
   --modal-width: 480px;

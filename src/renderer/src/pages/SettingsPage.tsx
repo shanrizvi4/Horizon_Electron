@@ -1,22 +1,72 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useData } from '../context/DataContext'
 
+// Check if running in Electron with API available
+const hasElectronAPI = (): boolean => {
+  return typeof window !== 'undefined' && window.api && typeof window.api.recording?.getStatus === 'function'
+}
+
 export function SettingsPage(): React.JSX.Element {
-  const { state, dispatch } = useData()
+  const { state, dispatch, syncToBackend } = useData()
   const { settings, studyStatus } = state
+  // Start with null to show loading state, then get actual status from service
+  const [isRecording, setIsRecording] = useState<boolean | null>(null)
+
+  // Sync with actual recording service status - this is the single source of truth
+  useEffect(() => {
+    if (!hasElectronAPI()) {
+      // Fallback for non-Electron: use settings
+      setIsRecording(settings.recordingEnabled)
+      return
+    }
+
+    // Get initial status from recording service (single source of truth)
+    window.api.recording.getStatus().then((status) => {
+      setIsRecording(status)
+    })
+
+    // Listen for status changes from recording service
+    const unsubscribe = window.api.recording.onStatusChange((status: boolean) => {
+      setIsRecording(status)
+    })
+
+    return unsubscribe
+  }, [settings.recordingEnabled])
 
   const handleNotificationChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    dispatch({
-      type: 'UPDATE_SETTINGS',
+    const action = {
+      type: 'UPDATE_SETTINGS' as const,
       payload: { notificationFrequency: parseInt(e.target.value, 10) }
-    })
+    }
+    dispatch(action)
+    syncToBackend(action)
   }
 
-  const handleToggle = (field: 'recordingEnabled' | 'disablePopup'): void => {
-    dispatch({
-      type: 'UPDATE_SETTINGS',
-      payload: { [field]: !settings[field] }
-    })
+  const handleRecordingToggle = async (): Promise<void> => {
+    if (hasElectronAPI()) {
+      // Control actual recording service
+      if (isRecording) {
+        await window.api.recording.stop()
+      } else {
+        await window.api.recording.start()
+      }
+      // Status will update via onStatusChange listener
+    } else {
+      // Fallback for non-Electron environment
+      dispatch({
+        type: 'UPDATE_SETTINGS',
+        payload: { recordingEnabled: !settings.recordingEnabled }
+      })
+    }
+  }
+
+  const handlePopupToggle = (): void => {
+    const action = {
+      type: 'UPDATE_SETTINGS' as const,
+      payload: { disablePopup: !settings.disablePopup }
+    }
+    dispatch(action)
+    syncToBackend(action)
   }
 
   const formatDate = (timestamp?: number): string => {
@@ -99,7 +149,7 @@ export function SettingsPage(): React.JSX.Element {
               <div className="settings-item-control">
                 <div
                   className={`toggle-switch ${settings.disablePopup ? 'active' : ''}`}
-                  onClick={() => handleToggle('disablePopup')}
+                  onClick={handlePopupToggle}
                 >
                   <div className="toggle-switch-knob" />
                 </div>
@@ -118,8 +168,9 @@ export function SettingsPage(): React.JSX.Element {
               </div>
               <div className="settings-item-control">
                 <div
-                  className={`toggle-switch ${settings.recordingEnabled ? 'active' : ''}`}
-                  onClick={() => handleToggle('recordingEnabled')}
+                  className={`toggle-switch ${isRecording === true ? 'active' : ''}`}
+                  onClick={handleRecordingToggle}
+                  style={{ opacity: isRecording === null ? 0.5 : 1 }}
                 >
                   <div className="toggle-switch-knob" />
                 </div>

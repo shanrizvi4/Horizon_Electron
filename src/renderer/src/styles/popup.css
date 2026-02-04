@@ -68,7 +68,7 @@
 }
 
 .popup-icon-btn.hovered {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(var(--glass-rgb), 0.15);
 }
 
 /* Suggestions Scroll Area */
@@ -89,12 +89,12 @@
 }
 
 .popup-suggestions-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(var(--glass-rgb), 0.2);
   border-radius: 3px;
 }
 
 .popup-suggestions-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(var(--glass-rgb), 0.3);
 }
 
 /* Time Group */
@@ -117,7 +117,7 @@
 /* Suggestion Card - matching main app style */
 .popup-suggestion-card {
   position: relative;
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(var(--glass-rgb), 0.06);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: none;
@@ -135,7 +135,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(var(--glass-rgb), 0.12);
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -149,12 +149,20 @@
 }
 
 .popup-suggestion-card.hovered {
-  background-color: rgba(255, 255, 255, 0.10);
+  background-color: rgba(var(--glass-rgb), 0.10);
   padding-bottom: 54px;
 }
 
 .popup-suggestion-card.hovered::before {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(var(--glass-rgb), 0.18);
+}
+
+[data-theme="light"] .popup-suggestion-card.hovered {
+  background-color: rgba(var(--glass-rgb), 0.06);
+}
+
+[data-theme="light"] .popup-suggestion-card.hovered::before {
+  background: rgba(var(--glass-rgb), 0.12);
 }
 
 /* .popup-card-content - Wrapper for title/desc, no styles needed */
@@ -163,11 +171,11 @@
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
-  color: #D6CCBA;
+  color: var(--text-heading);
   margin-bottom: 6px;
   line-height: var(--line-height-tight);
   letter-spacing: -0.01em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  text-shadow: var(--text-shadow);
 }
 
 .popup-card-description {
@@ -215,23 +223,23 @@
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: rgba(40, 48, 61, 0.75);
-  color: #D6CCBA;
+  background: var(--theme-btn-blue);
+  color: var(--btn-text);
   font-family: var(--font-family);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--glass-rgb), 0.1);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08);
   cursor: pointer;
   transition: all 200ms ease;
 }
 
 .popup-card-chat-btn:hover {
-  background: rgba(40, 48, 61, 0.95);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: #E8E0D4;
+  background: var(--theme-btn-blue-hover);
+  border-color: rgba(var(--glass-rgb), 0.2);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--btn-text);
 }
 
 .popup-card-remove-btn {
@@ -239,23 +247,23 @@
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: rgba(134, 21, 21, 0.65);
-  color: var(--text-primary);
+  background: var(--theme-btn-red-light);
+  color: var(--btn-text);
   font-family: var(--font-family);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--glass-rgb), 0.1);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08);
   cursor: pointer;
   transition: all 200ms ease;
 }
 
 .popup-card-remove-btn:hover {
-  background: rgba(134, 21, 21, 0.8);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: #E8E0D4;
+  background: var(--theme-btn-red-light-hover);
+  border-color: rgba(var(--glass-rgb), 0.2);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--btn-text);
 }
 
 /* Recording Button */
@@ -273,41 +281,41 @@
   gap: 8px;
   width: 200px;
   height: 40px;
-  background: rgba(53, 90, 53, 0.75);
+  background: var(--theme-btn-green);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: #D6CCBA;
+  color: var(--btn-text);
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--glass-rgb), 0.05);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08);
   cursor: pointer;
   transition: all 200ms ease;
 }
 
 .popup-recording-btn.recording {
-  background: rgb(134, 21, 21);
+  background: var(--theme-btn-red);
 }
 
 .popup-recording-btn.hovered {
-  background: rgba(53, 90, 53, 0.9);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: #E8E0D4;
+  background: var(--theme-btn-green-hover);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--btn-text);
 }
 
 .popup-recording-btn.recording.hovered {
-  background: rgb(154, 30, 30);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: #E8E0D4;
+  background: var(--theme-btn-red-hover);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--btn-text);
 }
 
 .popup-recording-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--text-primary);
+  background: var(--btn-text);
   opacity: 0.6;
 }
 
@@ -380,7 +388,7 @@
 }
 
 .popup-chat-back-btn.hovered {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(var(--glass-rgb), 0.15);
 }
 
 .popup-chat-title {
@@ -410,7 +418,7 @@
 }
 
 .popup-chat-open-app-btn.hovered {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(var(--glass-rgb), 0.15);
 }
 
 .popup-chat-messages {
@@ -442,7 +450,7 @@
 
 /* Execution Output in Popup */
 .popup-execution-output {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--glass-rgb), 0.08);
   border-radius: var(--radius-md);
   padding: 12px;
   margin-bottom: 15px;

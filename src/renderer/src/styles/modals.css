@@ -17,10 +17,10 @@
 
 /* Modal container */
 .modal {
-  background-color: rgba(50, 58, 70, 0.95);
+  background-color: var(--theme-base);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(var(--glass-rgb), 0.1);
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: var(--modal-width);
@@ -46,16 +46,16 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-lg) var(--spacing-xl);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(var(--glass-rgb), 0.08);
 }
 
 .modal-title {
   font-family: var(--font-family);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  color: #D6CCBA;
+  color: var(--text-heading);
   letter-spacing: -0.01em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  text-shadow: var(--text-shadow);
 }
 
 .modal-close-btn {
@@ -71,8 +71,8 @@
 }
 
 .modal-close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #D6CCBA;
+  background-color: rgba(var(--glass-rgb), 0.1);
+  color: var(--text-heading);
 }
 
 /* Modal body */
@@ -97,7 +97,7 @@
   justify-content: flex-end;
   gap: var(--spacing-md);
   padding: var(--spacing-lg) var(--spacing-xl);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(var(--glass-rgb), 0.08);
 }
 
 /* Form elements in modals */
@@ -110,9 +110,9 @@
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: #D6CCBA;
+  color: var(--text-heading);
   margin-bottom: var(--spacing-sm);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-shadow: var(--text-shadow);
 }
 
 .modal-form-input {
@@ -137,27 +137,27 @@
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-md) var(--spacing-lg);
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(var(--glass-rgb), 0.06);
+  border: 1px solid rgba(var(--glass-rgb), 0.08);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .feedback-option:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(var(--glass-rgb), 0.1);
+  border-color: rgba(var(--glass-rgb), 0.15);
 }
 
 .feedback-option.selected {
-  border-color: rgba(124, 154, 184, 0.5);
-  background-color: rgba(124, 154, 184, 0.15);
+  border-color: var(--accent-primary);
+  background-color: var(--accent-success-light);
 }
 
 .feedback-option-radio {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(var(--glass-rgb), 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -167,7 +167,7 @@
 }
 
 .feedback-option.selected .feedback-option-radio {
-  border-color: rgba(124, 154, 184, 0.7);
+  border-color: var(--accent-primary);
 }
 
 .feedback-option-radio-inner {
@@ -186,7 +186,7 @@
 .feedback-option-text {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
-  color: #D6CCBA;
+  color: var(--text-heading);
 }
 
 .feedback-textarea-label {
@@ -194,9 +194,9 @@
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: #D6CCBA;
+  color: var(--text-heading);
   margin-bottom: var(--spacing-sm);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-shadow: var(--text-shadow);
 }
 
 .feedback-textarea {
