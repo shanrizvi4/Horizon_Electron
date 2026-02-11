@@ -1,3 +1,4 @@
+import './styles/themes.css'
 import './styles/global.css'
 import './styles/layout.css'
 import './styles/sidebar.css'

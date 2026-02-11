@@ -1,24 +1,128 @@
+/**
+ * =============================================================================
+ * USE SUGGESTIONS HOOK
+ * =============================================================================
+ *
+ * Custom React hook for working with AI-generated suggestions.
+ * Provides CRUD operations, sorting, filtering, and grouping utilities.
+ *
+ * FEATURES:
+ * - Get all suggestions or active only
+ * - Update, dismiss, or complete suggestions
+ * - Sort by recency or importance
+ * - Filter by search query
+ * - Group by time period
+ *
+ * USAGE:
+ * ```tsx
+ * function SuggestionList() {
+ *   const {
+ *     activeSuggestions,
+ *     dismissSuggestion,
+ *     sortSuggestions,
+ *     groupSuggestionsByTime
+ *   } = useSuggestions()
+ *
+ *   const sorted = sortSuggestions(activeSuggestions, 'recent')
+ *   const grouped = groupSuggestionsByTime(sorted)
+ *
+ *   return (
+ *     <div>
+ *       {Array.from(grouped.entries()).map(([timeGroup, suggestions]) => (
+ *         <div key={timeGroup}>
+ *           <h3>{timeGroup}</h3>
+ *           {suggestions.map(s => (
+ *             <SuggestionCard
+ *               key={s.suggestionId}
+ *               suggestion={s}
+ *               onDismiss={() => dismissSuggestion(s.suggestionId)}
+ *             />
+ *           ))}
+ *         </div>
+ *       ))}
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @module hooks/useSuggestions
+ */
+
 import { useCallback, useMemo } from 'react'
 import { useData } from '../context/DataContext'
 import type { Suggestion, SortMethod } from '../types'
 
+// =============================================================================
+// TYPE DEFINITIONS
+// =============================================================================
+
+/**
+ * Return type of the useSuggestions hook.
+ */
 interface UseSuggestionsReturn {
+  /** All suggestions (including dismissed) */
   suggestions: Suggestion[]
+
+  /** Only active suggestions */
   activeSuggestions: Suggestion[]
+
+  /** Find a suggestion by ID */
   getSuggestion: (id: string) => Suggestion | undefined
+
+  /** Get all suggestions for a specific project */
   getProjectSuggestions: (projectId: number) => Suggestion[]
+
+  /** Update suggestion properties */
   updateSuggestion: (suggestionId: string, updates: Partial<Suggestion>) => void
+
+  /** Dismiss a suggestion (hide from active list) */
   dismissSuggestion: (suggestionId: string) => void
+
+  /** Mark a suggestion as complete */
   completeSuggestion: (suggestionId: string) => void
+
+  /** Sort suggestions by method */
   sortSuggestions: (suggestions: Suggestion[], method: SortMethod) => Suggestion[]
+
+  /** Filter suggestions by search query */
   filterSuggestions: (suggestions: Suggestion[], query: string) => Suggestion[]
+
+  /** Group suggestions by time period */
   groupSuggestionsByTime: (suggestions: Suggestion[]) => Map<string, Suggestion[]>
 }
 
-export function useSuggestions(): UseSuggestionsReturn {
-  const { state, dispatch, getSuggestionById, getProjectSuggestions, getActiveSuggestions, syncToBackend } =
-    useData()
+// =============================================================================
+// HOOK IMPLEMENTATION
+// =============================================================================
 
+/**
+ * Hook for working with AI-generated suggestions.
+ *
+ * Provides methods to manage suggestions and utilities for
+ * sorting, filtering, and grouping.
+ *
+ * @returns Suggestion management functions and data
+ */
+export function useSuggestions(): UseSuggestionsReturn {
+  const {
+    state,
+    dispatch,
+    getSuggestionById,
+    getProjectSuggestions,
+    getActiveSuggestions,
+    syncToBackend
+  } = useData()
+
+  // ---------------------------------------------------------------------------
+  // CRUD Operations
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Updates a suggestion's properties.
+   *
+   * @param suggestionId - ID of suggestion to update
+   * @param updates - Partial suggestion object with fields to update
+   */
   const updateSuggestion = useCallback(
     (suggestionId: string, updates: Partial<Suggestion>) => {
       const action = { type: 'UPDATE_SUGGESTION' as const, payload: { suggestionId, updates } }
@@ -28,6 +132,14 @@ export function useSuggestions(): UseSuggestionsReturn {
     [dispatch, syncToBackend]
   )
 
+  /**
+   * Dismisses a suggestion.
+   *
+   * Sets the suggestion's status to 'closed', hiding it from
+   * the active list. The suggestion is not deleted.
+   *
+   * @param suggestionId - ID of suggestion to dismiss
+   */
   const dismissSuggestion = useCallback(
     (suggestionId: string) => {
       const action = { type: 'DISMISS_SUGGESTION' as const, payload: { suggestionId } }
@@ -37,6 +149,14 @@ export function useSuggestions(): UseSuggestionsReturn {
     [dispatch, syncToBackend]
   )
 
+  /**
+   * Marks a suggestion as complete.
+   *
+   * Sets the suggestion's status to 'complete', indicating
+   * the user has finished the suggested task.
+   *
+   * @param suggestionId - ID of suggestion to complete
+   */
   const completeSuggestion = useCallback(
     (suggestionId: string) => {
       const action = { type: 'COMPLETE_SUGGESTION' as const, payload: { suggestionId } }
@@ -46,23 +166,58 @@ export function useSuggestions(): UseSuggestionsReturn {
     [dispatch, syncToBackend]
   )
 
+  // ---------------------------------------------------------------------------
+  // Sorting
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Sorts suggestions by the specified method.
+   *
+   * Methods:
+   * - 'recent': Most recently updated first
+   * - 'important': Highest score (support * benefit) first
+   *
+   * @param suggestions - Array of suggestions to sort
+   * @param method - Sort method ('recent' or 'important')
+   * @returns New sorted array (original unchanged)
+   */
   const sortSuggestions = useCallback((suggestions: Suggestion[], method: SortMethod) => {
     const sorted = [...suggestions]
+
     if (method === 'recent') {
+      // Sort by most recently updated/created
       sorted.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
     } else {
-      // Sort by importance (support * benefit)
+      // Sort by importance score (support * benefit)
       sorted.sort((a, b) => {
         const scoreA = a.support * a.utilities.benefit
         const scoreB = b.support * b.utilities.benefit
         return scoreB - scoreA
       })
     }
+
     return sorted
   }, [])
 
+  // ---------------------------------------------------------------------------
+  // Filtering
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Filters suggestions by search query.
+   *
+   * Searches in:
+   * - Title
+   * - Description
+   * - Keywords
+   *
+   * @param suggestions - Array of suggestions to filter
+   * @param query - Search query (case-insensitive)
+   * @returns Filtered array matching the query
+   */
   const filterSuggestions = useCallback((suggestions: Suggestion[], query: string) => {
     if (!query.trim()) return suggestions
+
     const lowerQuery = query.toLowerCase()
     return suggestions.filter(
       (s) =>
@@ -72,6 +227,24 @@ export function useSuggestions(): UseSuggestionsReturn {
     )
   }, [])
 
+  // ---------------------------------------------------------------------------
+  // Grouping
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Groups suggestions by time period.
+   *
+   * Time groups:
+   * - "Now" (< 1 hour)
+   * - "Last Hour" (1-2 hours)
+   * - "Today" (2-24 hours)
+   * - "Yesterday" (1-2 days)
+   * - "This Week" (2-7 days)
+   * - "Earlier" (> 7 days)
+   *
+   * @param suggestions - Array of suggestions to group
+   * @returns Map of time group name → suggestions array
+   */
   const groupSuggestionsByTime = useCallback((suggestions: Suggestion[]) => {
     const now = Date.now()
     const hour = 60 * 60 * 1000
@@ -105,11 +278,22 @@ export function useSuggestions(): UseSuggestionsReturn {
     return groups
   }, [])
 
+  // ---------------------------------------------------------------------------
+  // Memoized Values
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Active suggestions (memoized to prevent unnecessary re-renders).
+   */
   const activeSuggestions = useMemo(
     () => getActiveSuggestions(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [state.suggestions]
   )
+
+  // ---------------------------------------------------------------------------
+  // Return Value
+  // ---------------------------------------------------------------------------
 
   return {
     suggestions: state.suggestions,

@@ -15,6 +15,12 @@
   background-color: var(--bg-main);
 }
 
+/* Dusk theme: transparent content area to show body gradient */
+[data-theme="dusk"] .content-area,
+:root .content-area {
+  background-color: transparent;
+}
+
 .content-header {
   display: flex;
   align-items: center;

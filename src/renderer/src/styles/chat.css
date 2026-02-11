@@ -79,7 +79,7 @@
 
 .message-bubble.user {
   align-self: flex-end;
-  background: var(--accent-primary-tint);
+  background: var(--theme-btn-blue);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--text-heading);
@@ -280,7 +280,7 @@
 /* Message input */
 .message-input-container {
   padding: var(--spacing-lg) var(--spacing-xl);
-  padding-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-md);
   background-color: transparent;
 }
 

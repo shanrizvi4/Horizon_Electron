@@ -99,13 +99,11 @@ export function PopupSuggestionCard({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Content */}
       <div className="popup-card-content">
         <h3 className="popup-card-title">{suggestion.title}</h3>
         <p className="popup-card-description">{suggestion.description}</p>
       </div>
 
-      {/* Footer - slides up on hover */}
       <div className="popup-card-footer">
         <button className="popup-card-chat-btn" onClick={handleChatClick}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">

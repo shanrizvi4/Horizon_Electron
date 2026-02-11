@@ -1,28 +1,100 @@
+/**
+ * =============================================================================
+ * CHAT SERVICE
+ * =============================================================================
+ *
+ * Handles LLM (Large Language Model) integration for chat functionality.
+ * Currently integrates with Google's Gemini API for response generation.
+ *
+ * FEATURES:
+ * - Streaming responses (real-time text generation)
+ * - Context building from chat history, suggestions, and user preferences
+ * - Automatic retry with exponential backoff
+ * - Fallback to mock responses when API unavailable
+ *
+ * DATA FLOW:
+ * ┌─────────────────────────────────────────────────────────────────────────┐
+ * │  Frontend sends message                                                 │
+ * │         │                                                               │
+ * │         ▼                                                               │
+ * │  ┌─────────────────┐     ┌─────────────────────────────────────────┐   │
+ * │  │ IPC Handler     │ ──► │ chatService.generateResponse()          │   │
+ * │  │ (chats.ts)      │     │  - Builds context from:                 │   │
+ * │  └─────────────────┘     │    • Chat message history               │   │
+ * │                          │    • Associated suggestion              │   │
+ * │                          │    • User propositions (memories)       │   │
+ * │                          │    • Agent customization config         │   │
+ * │                          └─────────────────────────────────────────┘   │
+ * │                                      │                                  │
+ * │                                      ▼                                  │
+ * │                          ┌─────────────────────────────────────────┐   │
+ * │                          │ Gemini API (streaming)                  │   │
+ * │                          │  or Mock Response (fallback)            │   │
+ * │                          └─────────────────────────────────────────┘   │
+ * │                                      │                                  │
+ * │                                      ▼                                  │
+ * │                          ┌─────────────────────────────────────────┐   │
+ * │                          │ onChunk callback ──► IPC stream event   │   │
+ * │                          │ ──► Frontend updates UI in real-time    │   │
+ * │                          └─────────────────────────────────────────┘   │
+ * └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * @module services/chatService
+ */
+
 import type { Chat } from '../types'
 import { dataStore } from './dataStore'
 import { configService } from './config'
 
-// Gemini API configuration
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent'
+// =============================================================================
+// CONFIGURATION
+// =============================================================================
+
+/** Gemini API endpoint for streaming content generation */
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent'
+
+/** Maximum retry attempts before falling back to mock response */
 const MAX_RETRIES = 3
+
+/** Base delay between retries (multiplied by attempt number) */
 const RETRY_DELAY_MS = 1000
 
+// =============================================================================
+// TYPE DEFINITIONS
+// =============================================================================
+
+/**
+ * Gemini API message format.
+ * Each message has a role (user or model) and content parts.
+ */
 interface GeminiContent {
   role: 'user' | 'model'
   parts: { text: string }[]
 }
 
+/**
+ * Complete Gemini API request structure.
+ */
 interface GeminiRequest {
+  /** Conversation history */
   contents: GeminiContent[]
+
+  /** System-level instructions (context, preferences) */
   systemInstruction?: { parts: { text: string }[] }
+
+  /** Generation parameters */
   generationConfig?: {
-    temperature?: number
-    topK?: number
-    topP?: number
-    maxOutputTokens?: number
+    temperature?: number // Creativity (0-1)
+    topK?: number // Token diversity
+    topP?: number // Nucleus sampling
+    maxOutputTokens?: number // Response length limit
   }
 }
 
+/**
+ * Structure of a streaming response chunk from Gemini.
+ */
 interface GeminiStreamChunk {
   candidates?: Array<{
     content?: {
@@ -31,36 +103,105 @@ interface GeminiStreamChunk {
   }>
 }
 
+// =============================================================================
+// CHAT SERVICE CLASS
+// =============================================================================
+
+/**
+ * Service for generating LLM chat responses.
+ *
+ * USAGE:
+ * ```typescript
+ * import { chatService } from './services/chatService'
+ *
+ * // Generate streaming response
+ * await chatService.generateResponse(chat, userMessage, (chunk) => {
+ *   // Handle each text chunk as it arrives
+ *   console.log('Received chunk:', chunk)
+ * })
+ * ```
+ */
 class ChatService {
+  // ---------------------------------------------------------------------------
+  // Private State
+  // ---------------------------------------------------------------------------
+
+  /** Cached API key */
   private apiKey: string | null = null
 
+  // ---------------------------------------------------------------------------
+  // API Key Management
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Manually sets the API key.
+   * Use this to override the config file setting.
+   */
   setApiKey(key: string): void {
     this.apiKey = key
   }
 
+  /**
+   * Gets the Gemini API key.
+   *
+   * Priority:
+   * 1. Cached key (if set via setApiKey)
+   * 2. GEMINI_API_KEY environment variable
+   * 3. config.json file
+   *
+   * @returns API key or null if not configured
+   */
   getApiKey(): string | null {
-    // Try to get from config service (checks env var first, then config.json)
     if (!this.apiKey) {
       const key = configService.getGeminiApiKey()
-      this.apiKey = (key && key !== 'your_api_key_here') ? key : null
+      // Treat placeholder value as missing
+      this.apiKey = key && key !== 'your_api_key_here' ? key : null
     }
     return this.apiKey
   }
 
+  // ---------------------------------------------------------------------------
+  // Request Building
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Builds a Gemini API request from chat context.
+   *
+   * Includes:
+   * - Message history (user and assistant messages)
+   * - System instruction with:
+   *   - Initial prompt from chat
+   *   - Execution output from associated suggestion
+   *   - User propositions (memories/preferences)
+   *   - Agent customization config
+   *
+   * @param chat - The chat object with message history
+   * @param userMessage - The new message to respond to
+   * @returns Formatted Gemini API request
+   */
   private buildGeminiRequest(chat: Chat, userMessage: string): GeminiRequest {
     const contents: GeminiContent[] = []
 
-    // Build message history
+    // -------------------------------------------------------------------------
+    // Build Message History
+    // -------------------------------------------------------------------------
+
     for (const msg of chat.messages) {
+      // Skip prompt messages (they go in systemInstruction)
       if (msg.role === 'prompt') {
-        // System/prompt messages become part of the conversation context
-        continue // Handled in systemInstruction
-      } else if (msg.role === 'user') {
+        continue
+      }
+
+      // Add user messages
+      if (msg.role === 'user') {
         contents.push({
           role: 'user',
           parts: [{ text: msg.content }]
         })
-      } else if (msg.role === 'assistant' && !msg.isPlaceholder) {
+      }
+
+      // Add assistant messages (skip placeholders - they're loading indicators)
+      if (msg.role === 'assistant' && !msg.isPlaceholder) {
         contents.push({
           role: 'model',
           parts: [{ text: msg.content }]
@@ -74,15 +215,18 @@ class ChatService {
       parts: [{ text: userMessage }]
     })
 
-    // Build system instruction from chat context
+    // -------------------------------------------------------------------------
+    // Build System Instruction
+    // -------------------------------------------------------------------------
+
     const systemParts: string[] = []
 
-    // Add initial prompt if exists
+    // 1. Add initial prompt from chat (if exists)
     if (chat.initialPrompt) {
       systemParts.push(chat.initialPrompt)
     }
 
-    // Get associated suggestion context
+    // 2. Add context from associated suggestion
     if (chat.associatedSuggestionId) {
       const suggestion = dataStore.getSuggestionById(chat.associatedSuggestionId)
       if (suggestion?.executionOutput) {
@@ -90,33 +234,44 @@ class ChatService {
       }
     }
 
-    // Add user propositions for context
+    // 3. Add user propositions (memories/preferences)
     const propositions = dataStore.getPropositions()
     if (propositions.length > 0) {
       const propsText = propositions.map((p) => `- ${p.text}`).join('\n')
       systemParts.push(`User preferences and context:\n${propsText}`)
     }
 
-    // Add agent config
+    // 4. Add agent customization config
     const agentConfig = dataStore.getAgentConfig()
     if (agentConfig.focusMoreOn || agentConfig.focusLessOn || agentConfig.style) {
       const configParts: string[] = []
-      if (agentConfig.focusMoreOn) configParts.push(`Focus more on: ${agentConfig.focusMoreOn}`)
-      if (agentConfig.focusLessOn) configParts.push(`Focus less on: ${agentConfig.focusLessOn}`)
-      if (agentConfig.style) configParts.push(`Communication style: ${agentConfig.style}`)
+      if (agentConfig.focusMoreOn) {
+        configParts.push(`Focus more on: ${agentConfig.focusMoreOn}`)
+      }
+      if (agentConfig.focusLessOn) {
+        configParts.push(`Focus less on: ${agentConfig.focusLessOn}`)
+      }
+      if (agentConfig.style) {
+        configParts.push(`Communication style: ${agentConfig.style}`)
+      }
       systemParts.push(`Agent customization:\n${configParts.join('\n')}`)
     }
+
+    // -------------------------------------------------------------------------
+    // Assemble Request
+    // -------------------------------------------------------------------------
 
     const request: GeminiRequest = {
       contents,
       generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 2048
+        temperature: 0.7, // Balanced creativity
+        topK: 40, // Consider top 40 tokens
+        topP: 0.95, // Use 95% probability mass
+        maxOutputTokens: 2048 // Limit response length
       }
     }
 
+    // Add system instruction if we have any context
     if (systemParts.length > 0) {
       request.systemInstruction = {
         parts: [{ text: systemParts.join('\n\n') }]
@@ -126,6 +281,26 @@ class ChatService {
     return request
   }
 
+  // ---------------------------------------------------------------------------
+  // Response Generation
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Generates a streaming response for a chat message.
+   *
+   * @param chat - The chat object with history
+   * @param userMessage - The message to respond to
+   * @param onChunk - Callback invoked for each text chunk received
+   *
+   * @example
+   * ```typescript
+   * let fullResponse = ''
+   * await chatService.generateResponse(chat, 'Hello!', (chunk) => {
+   *   fullResponse += chunk
+   *   updateUI(fullResponse)
+   * })
+   * ```
+   */
   async generateResponse(
     chat: Chat,
     userMessage: string,
@@ -133,38 +308,49 @@ class ChatService {
   ): Promise<void> {
     const apiKey = this.getApiKey()
 
+    // Fall back to mock if no API key configured
     if (!apiKey) {
-      // Fall back to mock response if no API key
       console.log('No Gemini API key configured, using mock response')
       await this.generateMockResponse(onChunk)
       return
     }
 
+    // Build the API request
     const request = this.buildGeminiRequest(chat, userMessage)
 
+    // Attempt API call with retries
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
         await this.streamFromGemini(apiKey, request, onChunk)
-        return // Success
+        return // Success - exit
       } catch (error) {
         console.error(`Gemini API attempt ${attempt + 1} failed:`, error)
 
+        // Wait before retrying (exponential backoff)
         if (attempt < MAX_RETRIES - 1) {
           await this.delay(RETRY_DELAY_MS * (attempt + 1))
         }
       }
     }
 
-    // All retries failed, use mock response
+    // All retries exhausted - fall back to mock
     console.error('All Gemini API attempts failed, using mock response')
     await this.generateMockResponse(onChunk)
   }
 
+  /**
+   * Streams response from Gemini API using Server-Sent Events (SSE).
+   *
+   * @param apiKey - Gemini API key
+   * @param request - Formatted API request
+   * @param onChunk - Callback for each text chunk
+   */
   private async streamFromGemini(
     apiKey: string,
     request: GeminiRequest,
     onChunk: (chunk: string) => void
   ): Promise<void> {
+    // Use SSE format for streaming
     const url = `${GEMINI_API_URL}?alt=sse&key=${apiKey}`
 
     const response = await fetch(url, {
@@ -175,6 +361,7 @@ class ChatService {
       body: JSON.stringify(request)
     })
 
+    // Check for errors
     if (!response.ok) {
       const errorText = await response.text()
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
@@ -183,6 +370,10 @@ class ChatService {
     if (!response.body) {
       throw new Error('No response body from Gemini API')
     }
+
+    // -------------------------------------------------------------------------
+    // Process SSE Stream
+    // -------------------------------------------------------------------------
 
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
@@ -193,73 +384,136 @@ class ChatService {
 
       if (done) break
 
+      // Decode bytes to text and add to buffer
       buffer += decoder.decode(value, { stream: true })
 
-      // Process SSE events
+      // Process complete lines
       const lines = buffer.split('\n')
       buffer = lines.pop() || '' // Keep incomplete line in buffer
 
       for (const line of lines) {
+        // SSE data lines start with "data: "
         if (line.startsWith('data: ')) {
           const data = line.slice(6)
+
+          // Skip stream end marker
           if (data === '[DONE]') continue
 
           try {
             const parsed: GeminiStreamChunk = JSON.parse(data)
             const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text
+
             if (text) {
               onChunk(text)
             }
           } catch {
-            // Ignore parse errors for partial chunks
+            // Ignore JSON parse errors for partial/malformed chunks
           }
         }
       }
     }
 
-    // Process any remaining buffer
+    // Process any remaining data in buffer
     if (buffer.startsWith('data: ')) {
       const data = buffer.slice(6)
       if (data !== '[DONE]') {
         try {
           const parsed: GeminiStreamChunk = JSON.parse(data)
           const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text
+
           if (text) {
             onChunk(text)
           }
         } catch {
-          // Ignore
+          // Ignore parse errors
         }
       }
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Mock Response (Fallback)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Generates a mock response when API is unavailable.
+   * Simulates streaming by sending chunks with delays.
+   *
+   * Used when:
+   * - No API key is configured
+   * - All API retry attempts fail
+   */
   private async generateMockResponse(onChunk: (chunk: string) => void): Promise<void> {
     const responses = [
-      "I understand you're asking about this topic. Let me help you with that.\n\nBased on the context you've provided, here are some key insights:\n\n1. **First consideration** - This is an important aspect to keep in mind when approaching this problem.\n\n2. **Second point** - Building on the first idea, we can see how these concepts connect.\n\n3. **Practical suggestion** - Here's what I'd recommend as a next step.\n\nWould you like me to elaborate on any of these points?",
+      "I understand you're asking about this topic. Let me help you with that.\n\n" +
+        'Based on the context you\'ve provided, here are some key insights:\n\n' +
+        '1. **First consideration** - This is an important aspect to keep in mind.\n\n' +
+        '2. **Second point** - Building on the first idea, we can see connections.\n\n' +
+        '3. **Practical suggestion** - Here\'s what I\'d recommend as a next step.\n\n' +
+        'Would you like me to elaborate on any of these points?',
 
-      "Thank you for your question. Let me break this down:\n\n**Analysis:**\nLooking at the information available, there are several factors to consider.\n\n**Recommendations:**\n- Start by understanding the core requirements\n- Consider the trade-offs between different approaches\n- Test your assumptions with small experiments\n\n**Next Steps:**\nI'd suggest focusing on the most impactful areas first. What aspect would you like to explore further?",
+      'Thank you for your question. Let me break this down:\n\n' +
+        '**Analysis:**\n' +
+        'Looking at the information available, there are several factors to consider.\n\n' +
+        '**Recommendations:**\n' +
+        '- Start by understanding the core requirements\n' +
+        '- Consider the trade-offs between different approaches\n' +
+        '- Test your assumptions with small experiments\n\n' +
+        "What aspect would you like to explore further?",
 
-      "Great question! Here's my perspective:\n\nThe key insight here is understanding how different components interact. When we look at the bigger picture, we can identify patterns that help guide our decisions.\n\n**Key Takeaways:**\n1. Context matters - always consider the broader environment\n2. Iterate quickly - small experiments reveal valuable information\n3. Document learnings - future decisions benefit from past insights\n\nLet me know if you'd like to dive deeper into any specific area."
+      'Great question! Here\'s my perspective:\n\n' +
+        'The key insight here is understanding how different components interact.\n\n' +
+        '**Key Takeaways:**\n' +
+        '1. Context matters - always consider the broader environment\n' +
+        '2. Iterate quickly - small experiments reveal valuable information\n' +
+        '3. Document learnings - future decisions benefit from past insights\n\n' +
+        "Let me know if you'd like to dive deeper into any specific area."
     ]
 
+    // Select a random response
     const response = responses[Math.floor(Math.random() * responses.length)]
 
-    // Simulate streaming by sending chunks
+    // Simulate streaming by sending word chunks
     const words = response.split(' ')
-    let chunkSize = 3
+    const chunkSize = 3 // Words per chunk
 
     for (let i = 0; i < words.length; i += chunkSize) {
       const chunk = words.slice(i, i + chunkSize).join(' ') + ' '
       onChunk(chunk)
+
+      // Simulate typing delay (50-100ms per chunk)
       await this.delay(50 + Math.random() * 50)
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Utility
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Promise-based delay.
+   */
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 
-// Singleton instance
+// =============================================================================
+// SINGLETON EXPORT
+// =============================================================================
+
+/**
+ * Singleton instance of the ChatService.
+ *
+ * @example
+ * ```typescript
+ * import { chatService } from './services/chatService'
+ *
+ * // Generate response with streaming
+ * await chatService.generateResponse(chat, message, (chunk) => {
+ *   // Send chunk to frontend
+ *   webContents.send('chats:streamChunk', { chatId, chunk })
+ * })
+ * ```
+ */
 export const chatService = new ChatService()

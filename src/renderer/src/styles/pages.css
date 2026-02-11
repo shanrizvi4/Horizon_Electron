@@ -457,26 +457,69 @@
   margin-left: var(--spacing-xl);
 }
 
-/* Toggle switch */
+/* Toggle switch - Liquid Glass */
 .toggle-switch {
   position: relative;
-  width: 48px;
+  width: 52px;
   height: 28px;
-  background-color: rgba(var(--glass-rgb), 0.1);
+  background-color: rgba(var(--glass-rgb), 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all var(--transition-fast);
-  border: 1px solid rgba(var(--glass-rgb), 0.08);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all var(--transition-normal);
+  border: none;
+}
+
+/* Liquid glass border effect for toggle */
+.toggle-switch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.2) 0%,
+    rgba(var(--glass-rgb), 0.08) 50%,
+    rgba(var(--glass-rgb), 0.2) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: background var(--transition-normal);
 }
 
 .toggle-switch:hover {
   background-color: rgba(var(--glass-rgb), 0.12);
 }
 
+.toggle-switch:hover::before {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.25) 0%,
+    rgba(var(--glass-rgb), 0.12) 50%,
+    rgba(var(--glass-rgb), 0.25) 100%
+  );
+}
+
 .toggle-switch.active {
-  background-color: var(--accent-success-light);
-  border-color: var(--accent-success);
+  background-color: var(--theme-btn-green);
+}
+
+.toggle-switch.active::before {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.25) 100%
+  );
 }
 
 .toggle-switch-knob {
@@ -485,73 +528,86 @@
   left: 3px;
   width: 22px;
   height: 22px;
-  background-color: var(--text-heading);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.8) 100%
+  );
   border-radius: 50%;
-  transition: transform var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .toggle-switch.active .toggle-switch-knob {
-  transform: translateX(20px);
+  transform: translateX(24px);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-/* Slider */
-.slider-container {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
+/* Custom Slider - fully custom, no WebKit nonsense */
+.custom-slider {
+  position: relative;
+  width: 120px;
+  height: 28px;
+  background-color: rgba(var(--glass-rgb), 0.08);
+  border-radius: var(--radius-full);
 }
 
-.slider {
-  width: 160px;
-  height: 6px;
-  background-color: rgba(var(--glass-rgb), 0.1);
-  border-radius: 3px;
-  appearance: none;
+.custom-slider::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.2) 0%,
+    rgba(var(--glass-rgb), 0.08) 50%,
+    rgba(var(--glass-rgb), 0.2) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.custom-slider input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
   cursor: pointer;
-  border: 1px solid rgba(var(--glass-rgb), 0.05);
+  margin: 0;
+  z-index: 2;
 }
 
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  background: var(--accent-primary);
+.custom-slider-knob {
+  position: absolute;
+  top: 3px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.8) 100%
+  );
   border-radius: 50%;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(var(--glass-rgb), 0.15);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+  transition: left 0.05s ease-out;
 }
-
-.slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  background: var(--accent-primary-hover);
-}
-
-.slider-value {
-  font-family: var(--font-family-sans);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
-  min-width: 28px;
-  text-align: center;
-}
-
-/* Study status badge */
-.study-status {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--accent-success-light);
-  border-radius: var(--radius-lg);
-}
-
-.study-status-dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-success);
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }

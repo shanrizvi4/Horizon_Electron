@@ -38,37 +38,9 @@ export function SuggestionCard({
   return (
     <>
       <div className="suggestion-card">
-        {/* Wrapper allows title/desc to animate together */}
         <div className="suggestion-card-content">
-          {/* <div className="suggestion-card-header">
-            {showProject && project && (
-              <button className="suggestion-card-project-tag" onClick={handleProjectClick}>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                  <path d="M1 3.5a1.5 1.5 0 011.5-1.5h3l1.5 1.5h3A1.5 1.5 0 0111.5 5v4a1.5 1.5 0 01-1.5 1.5H2.5A1.5 1.5 0 011 9V3.5z" />
-                </svg>
-                {project.title}
-              </button>
-            )}
-            <SuggestionActions
-              onComplete={() => completeSuggestion(suggestion.suggestionId)}
-              onDismiss={() => dismissSuggestion(suggestion.suggestionId)}
-              onThumbsUp={() => setShowThumbsUp(true)}
-              onThumbsDown={() => setShowThumbsDown(true)}
-            />
-          </div> */}
-
           <h3 className="suggestion-card-title">{suggestion.title}</h3>
           <p className="suggestion-card-description">{suggestion.description}</p>
-
-          {/* {suggestion.keywords.length > 0 && (
-            <div className="suggestion-card-keywords">
-              {suggestion.keywords.map((keyword, i) => (
-                <span key={i} className="suggestion-card-keyword">
-                  {keyword}
-                </span>
-              ))}
-            </div>
-          )} */}
         </div>
 
         <div className="suggestion-card-footer">
@@ -84,18 +56,6 @@ export function SuggestionCard({
             </svg>
             Remove
           </button>
-          {/* <div className="suggestion-card-support">
-              <div className="suggestion-card-support-bar">
-                <div
-                  className="suggestion-card-support-fill"
-                  style={{ width: `${supportPercentage}%` }}
-                />
-              </div>
-              <span>{supportPercentage}%</span>
-            </div> */}
-          {/* <span className="suggestion-card-timestamp">
-            {formatTimestamp(suggestion.updatedAt || suggestion.createdAt)}
-          </span> */}
         </div>
       </div>
 

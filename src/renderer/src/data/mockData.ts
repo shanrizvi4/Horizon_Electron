@@ -326,6 +326,30 @@ export const mockProjects: Project[] = [
 
 export const mockChats: Chat[] = [
   {
+    id: 'chat-test',
+    title: 'Test Chat for UI',
+    messages: [
+      {
+        id: 'msg-test-1',
+        role: 'user',
+        content: 'This is a test message to help with UI development',
+        isPlaceholder: false,
+        isError: false
+      },
+      {
+        id: 'msg-test-2',
+        role: 'assistant',
+        content: 'Got it! This is a response to help you test the UI styling and layout. Feel free to use this chat to experiment with different designs.',
+        isPlaceholder: false,
+        isError: false
+      }
+    ],
+    hasReceivedInitialResponse: true,
+    isLoadingResponse: false,
+    createdAt: Date.now(),
+    status: 'active'
+  },
+  {
     id: 'chat-1',
     title: 'Dark mode implementation',
     messages: [

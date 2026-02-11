@@ -29,6 +29,17 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Subtle gradient background for dusk theme */
+[data-theme="dusk"] body,
+:root body {
+  background: linear-gradient(
+    135deg,
+    #495a6e 0%,
+    #46576B 50%,
+    #414f5f 100%
+  );
+}
+
 /* Typography */
 h1,
 h2,

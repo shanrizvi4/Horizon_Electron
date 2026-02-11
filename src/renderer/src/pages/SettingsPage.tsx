@@ -6,11 +6,40 @@ const hasElectronAPI = (): boolean => {
   return typeof window !== 'undefined' && window.api && typeof window.api.recording?.getStatus === 'function'
 }
 
+type ThemeType = 'dusk' | 'light' | 'dark'
+
+const THEMES: { value: ThemeType; label: string; description: string }[] = [
+  { value: 'dusk', label: 'Dusk', description: 'Blue/slate theme (default)' },
+  { value: 'light', label: 'Light', description: 'Clean and bright' },
+  { value: 'dark', label: 'Dark', description: 'Deep and rich' }
+]
+
+function getInitialTheme(): ThemeType {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('gumbo-theme')
+    if (saved === 'dusk' || saved === 'light' || saved === 'dark') {
+      return saved
+    }
+  }
+  return 'dusk'
+}
+
+function applyTheme(theme: ThemeType): void {
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('gumbo-theme', theme)
+}
+
 export function SettingsPage(): React.JSX.Element {
   const { state, dispatch, syncToBackend } = useData()
-  const { settings, studyStatus } = state
+  const { settings } = state
   // Start with null to show loading state, then get actual status from service
   const [isRecording, setIsRecording] = useState<boolean | null>(null)
+  const [currentTheme, setCurrentTheme] = useState<ThemeType>(getInitialTheme)
+
+  // Apply theme on mount
+  useEffect(() => {
+    applyTheme(currentTheme)
+  }, [currentTheme])
 
   // Sync with actual recording service status - this is the single source of truth
   useEffect(() => {
@@ -32,6 +61,10 @@ export function SettingsPage(): React.JSX.Element {
 
     return unsubscribe
   }, [settings.recordingEnabled])
+
+  const handleThemeChange = (theme: ThemeType): void => {
+    setCurrentTheme(theme)
+  }
 
   const handleNotificationChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const action = {
@@ -69,15 +102,6 @@ export function SettingsPage(): React.JSX.Element {
     syncToBackend(action)
   }
 
-  const formatDate = (timestamp?: number): string => {
-    if (!timestamp) return 'N/A'
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
-
   return (
     <div className="content-area">
       <div className="content-header">
@@ -88,32 +112,31 @@ export function SettingsPage(): React.JSX.Element {
       <div className="content-body">
         <div className="page">
           <div className="settings-section">
-            <h3 className="settings-section-title">Study Phase</h3>
+            <h3 className="settings-section-title">Appearance</h3>
             <div className="settings-item">
               <div className="settings-item-info">
-                <p className="settings-item-label">Status</p>
-                <p className="settings-item-description">Current study phase status</p>
+                <p className="settings-item-label">Theme</p>
+                <p className="settings-item-description">Choose your preferred color scheme</p>
               </div>
               <div className="settings-item-control">
-                <div className="study-status">
-                  <span className="study-status-dot" />
-                  <span className="study-status-text">{studyStatus.status}</span>
+                <div className="theme-selector">
+                  {THEMES.map((theme) => (
+                    <button
+                      key={theme.value}
+                      className={`theme-option ${currentTheme === theme.value ? 'active' : ''}`}
+                      onClick={() => handleThemeChange(theme.value)}
+                      title={theme.description}
+                    >
+                      <span
+                        className="theme-option-preview"
+                        data-theme-preview={theme.value}
+                      />
+                      <span className="theme-option-label">{theme.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
-            {studyStatus.endTime && (
-              <div className="settings-item">
-                <div className="settings-item-info">
-                  <p className="settings-item-label">End Date</p>
-                  <p className="settings-item-description">When the current phase ends</p>
-                </div>
-                <div className="settings-item-control">
-                  <span style={{ color: 'var(--text-primary)' }}>
-                    {formatDate(studyStatus.endTime)}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="settings-section">
@@ -126,16 +149,15 @@ export function SettingsPage(): React.JSX.Element {
                 </p>
               </div>
               <div className="settings-item-control">
-                <div className="slider-container">
+                <div className="custom-slider">
                   <input
                     type="range"
-                    className="slider"
                     min="1"
                     max="10"
                     value={settings.notificationFrequency}
                     onChange={handleNotificationChange}
                   />
-                  <span className="slider-value">{settings.notificationFrequency}</span>
+                  <div className="custom-slider-knob" style={{ left: `calc(${((settings.notificationFrequency - 1) / 9) * 100}% - ${((settings.notificationFrequency - 1) / 9) * 22}px + 3px)` }} />
                 </div>
               </div>
             </div>

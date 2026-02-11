@@ -9,7 +9,7 @@ import { screenCaptureService } from './services/screenCapture'
 import { mouseTrackerService } from './services/mouseTracker'
 import { pipelineService } from './services/pipelineService'
 // import { testPipeline } from './services/pipelineTest'
-// import { runFullLLMPipeline } from './services/llmPipelineTest'
+// import { runFullLLMPipeline } from './services/llmPipelineTest'  // For testing
 import { registerAllIpcHandlers } from './ipc'
 import { setPopupFunctions, notifyPopupVisibilityChange } from './ipc/popup'
 
@@ -224,7 +224,6 @@ function createPopupWindow(): Promise<void> {
       hasShadow: true,
       vibrancy: 'under-window',
       visualEffectState: 'active',
-      visibleOnAllWorkspaces: true,
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
@@ -439,13 +438,12 @@ async function initializeServices(): Promise<void> {
   //   }
   // }
 
-  // if (process.env.TEST_LLM === '1') {
-  //   console.log('\n*** FULL LLM PIPELINE TEST MODE ***')
-  //   try {
-  //     await runFullLLMPipeline()
-  //   } catch (error) {
-  //     console.error('LLM Pipeline test failed:', error)
-  //   }
+  // LLM pipeline test - uncomment to run on startup
+  // console.log('\n*** FULL LLM PIPELINE TEST MODE ***')
+  // try {
+  //   await runFullLLMPipeline()
+  // } catch (error) {
+  //   console.error('LLM Pipeline test failed:', error)
   // }
 
   console.log('All services initialized')

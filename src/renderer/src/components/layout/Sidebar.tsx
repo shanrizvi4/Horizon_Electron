@@ -127,7 +127,7 @@ export function Sidebar(): React.JSX.Element {
           )}
         </SidebarSection> */}
 
-        <SidebarSection title="Recent Chats">
+        <SidebarSection title="Chats">
           {recentChats.map((chat) => (
             <div
               key={chat.id}

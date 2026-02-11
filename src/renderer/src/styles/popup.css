@@ -128,14 +128,24 @@
   transition: all var(--transition-normal);
 }
 
-/* Liquid glass border effect */
+/* Liquid glass border effect - diagonal reflection (matching main app) */
 .popup-suggestion-card::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: rgba(var(--glass-rgb), 0.12);
+  /* Diagonal gradient: bright on top-left, fades through middle, bright on bottom-right */
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.18) 0%,
+    rgba(var(--glass-rgb), 0.14) 25%,
+    rgba(var(--glass-rgb), 0.05) 40%,
+    rgba(var(--glass-rgb), 0.02) 50%,
+    rgba(var(--glass-rgb), 0.05) 60%,
+    rgba(var(--glass-rgb), 0.14) 75%,
+    rgba(var(--glass-rgb), 0.18) 100%
+  );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -154,7 +164,17 @@
 }
 
 .popup-suggestion-card.hovered::before {
-  background: rgba(var(--glass-rgb), 0.18);
+  /* Same diagonal pattern on hover */
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.22) 0%,
+    rgba(var(--glass-rgb), 0.18) 25%,
+    rgba(var(--glass-rgb), 0.07) 40%,
+    rgba(var(--glass-rgb), 0.03) 50%,
+    rgba(var(--glass-rgb), 0.07) 60%,
+    rgba(var(--glass-rgb), 0.18) 75%,
+    rgba(var(--glass-rgb), 0.22) 100%
+  );
 }
 
 [data-theme="light"] .popup-suggestion-card.hovered {
@@ -162,10 +182,18 @@
 }
 
 [data-theme="light"] .popup-suggestion-card.hovered::before {
-  background: rgba(var(--glass-rgb), 0.12);
+  /* Keep same border in light mode */
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.18) 0%,
+    rgba(var(--glass-rgb), 0.14) 25%,
+    rgba(var(--glass-rgb), 0.05) 40%,
+    rgba(var(--glass-rgb), 0.02) 50%,
+    rgba(var(--glass-rgb), 0.05) 60%,
+    rgba(var(--glass-rgb), 0.14) 75%,
+    rgba(var(--glass-rgb), 0.18) 100%
+  );
 }
-
-/* .popup-card-content - Wrapper for title/desc, no styles needed */
 
 .popup-card-title {
   font-family: var(--font-family);
