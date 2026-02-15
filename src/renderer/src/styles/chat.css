@@ -87,6 +87,11 @@
   border: none;
 }
 
+/* Light mode: use white text on dark bubble */
+[data-theme="light"] .message-bubble.user {
+  color: #FFFFFF;
+}
+
 /* Liquid glass border effect for user bubble */
 .message-bubble.user::before {
   content: '';

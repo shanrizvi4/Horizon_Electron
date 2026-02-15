@@ -15,6 +15,10 @@
   border: none;
 }
 
+[data-theme="light"] .sidebar {
+  background-color: rgba(var(--glass-rgb), 0.03);
+}
+
 /* Liquid glass border effect - diagonal reflection (top-left to bottom-right) */
 .sidebar::before {
   content: '';

@@ -128,6 +128,10 @@
   transition: all var(--transition-normal);
 }
 
+[data-theme="light"] .popup-suggestion-card {
+  background-color: rgba(var(--glass-rgb), 0.03);
+}
+
 /* Liquid glass border effect - diagonal reflection (matching main app) */
 .popup-suggestion-card::before {
   content: '';
@@ -159,40 +163,12 @@
 }
 
 .popup-suggestion-card.hovered {
-  background-color: rgba(var(--glass-rgb), 0.10);
+  background-color: rgba(var(--glass-rgb), 0.08);
   padding-bottom: 54px;
 }
 
-.popup-suggestion-card.hovered::before {
-  /* Same diagonal pattern on hover */
-  background: linear-gradient(
-    135deg,
-    rgba(var(--glass-rgb), 0.22) 0%,
-    rgba(var(--glass-rgb), 0.18) 25%,
-    rgba(var(--glass-rgb), 0.07) 40%,
-    rgba(var(--glass-rgb), 0.03) 50%,
-    rgba(var(--glass-rgb), 0.07) 60%,
-    rgba(var(--glass-rgb), 0.18) 75%,
-    rgba(var(--glass-rgb), 0.22) 100%
-  );
-}
-
 [data-theme="light"] .popup-suggestion-card.hovered {
-  background-color: rgba(var(--glass-rgb), 0.06);
-}
-
-[data-theme="light"] .popup-suggestion-card.hovered::before {
-  /* Keep same border in light mode */
-  background: linear-gradient(
-    135deg,
-    rgba(var(--glass-rgb), 0.18) 0%,
-    rgba(var(--glass-rgb), 0.14) 25%,
-    rgba(var(--glass-rgb), 0.05) 40%,
-    rgba(var(--glass-rgb), 0.02) 50%,
-    rgba(var(--glass-rgb), 0.05) 60%,
-    rgba(var(--glass-rgb), 0.14) 75%,
-    rgba(var(--glass-rgb), 0.18) 100%
-  );
+  background-color: rgba(var(--glass-rgb), 0.08);
 }
 
 .popup-card-title {
