@@ -5,6 +5,55 @@
  * Each step has a system prompt and a user prompt template.
  */
 
+import type { FrameAnalysis } from './frameAnalysisService'
+
+// ============================================================
+// STEP 2.5: CONCENTRATION GATE PROMPTS
+// ============================================================
+export const CONCENTRATION_GATE_PROMPTS = {
+  system: `You evaluate whether a user's current screen activity warrants generating productivity suggestions. Consider:
+- Is this meaningfully different from recent activity?
+- Is this important work (crisis, deadline, learning, coding, writing) or low-value (social media, idle, entertainment)?
+- Even if similar to recent frames, high-importance work may still warrant processing.
+
+IMPORTANT: Be conservative about skipping. When in doubt, choose CONTINUE.
+
+Respond in JSON format:
+{
+  "decision": "CONTINUE" | "SKIP",
+  "importance": 0.0-1.0,
+  "reason": "Brief explanation"
+}
+
+Importance scale:
+- 0.0-0.3: Low value (social media browsing, entertainment, idle)
+- 0.4-0.6: Medium value (general browsing, casual reading)
+- 0.7-1.0: High value (active work, coding, writing, meetings, urgent tasks)`,
+
+  user: (currentFrame: FrameAnalysis, recentFrames: FrameAnalysis[]): string => {
+    const formatFrame = (frame: FrameAnalysis): string => {
+      return `{
+  description: "${frame.analysis.description}",
+  activities: [${frame.analysis.activities.map(a => `"${a}"`).join(', ')}],
+  applications: [${frame.analysis.applications.map(a => `"${a}"`).join(', ')}],
+  keywords: [${frame.analysis.keywords.map(k => `"${k}"`).join(', ')}]
+}`
+    }
+
+    const recentFramesStr = recentFrames.length > 0
+      ? recentFrames.map((f, i) => `[${i + 1}] ${formatFrame(f)}`).join('\n\n')
+      : 'No recent frames available.'
+
+    return `Current frame:
+${formatFrame(currentFrame)}
+
+Recent frames (for context):
+${recentFramesStr}
+
+Should we generate suggestions for this activity?`
+  }
+}
+
 // ============================================================
 // STEP 2: FRAME ANALYSIS PROMPTS
 // ============================================================

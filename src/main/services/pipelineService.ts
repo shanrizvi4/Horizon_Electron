@@ -3,7 +3,7 @@
  * PIPELINE SERVICE
  * =============================================================================
  *
- * Orchestrates the 5-step suggestion generation pipeline.
+ * Orchestrates the suggestion generation pipeline.
  *
  * PIPELINE STEPS:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -22,6 +22,17 @@
  * │  │  Process: Vision LLM transcribes screen content                 │   │
  * │  └─────────────────────────────────────────────────────────────────┘   │
  * │                              │                                          │
+ * │                              ▼                                          │
+ * │  STEP 2.5: CONCENTRATION GATE                                           │
+ * │  ┌─────────────────────────────────────────────────────────────────┐   │
+ * │  │  Source: concentrationGateService                               │   │
+ * │  │  Output: data/concentration_gate/gate_<frameId>.json            │   │
+ * │  │  Process: Decide CONTINUE/SKIP based on similarity & importance │   │
+ * │  └─────────────────────────────────────────────────────────────────┘   │
+ * │                              │                                          │
+ * │                    (if SKIP) ├──────────────────> STOP                  │
+ * │                              │                                          │
+ * │                   (if CONTINUE)                                         │
  * │                              ▼                                          │
  * │  STEP 3: SUGGESTION GENERATION                                          │
  * │  ┌─────────────────────────────────────────────────────────────────┐   │
@@ -63,6 +74,7 @@
 
 import { dataStore } from './dataStore'
 import { frameAnalysisService } from './frameAnalysisService'
+import { concentrationGateService } from './concentrationGateService'
 import { suggestionGenerationService } from './suggestionGenerationService'
 import { scoringFilteringService } from './scoringFilteringService'
 import { deduplicationService } from './deduplicationService'
@@ -122,6 +134,7 @@ class PipelineService {
   async initialize(): Promise<void> {
     // Initialize each step's service
     await frameAnalysisService.initialize()
+    await concentrationGateService.initialize()
     await suggestionGenerationService.initialize()
     await scoringFilteringService.initialize()
     await deduplicationService.initialize()
@@ -211,6 +224,32 @@ class PipelineService {
       console.log(`  Location: ${frameAnalysisService.getAnalysisDir()}`)
       const recentAnalyses = await frameAnalysisService.getRecentAnalyses(5)
       console.log(`  Recent analyses: ${recentAnalyses.length}`)
+
+      // -----------------------------------------------------------------------
+      // Step 2.5: Concentration Gate
+      // -----------------------------------------------------------------------
+      console.log('\n[Step 2.5] Concentration Gate')
+      console.log(`  Location: ${concentrationGateService.getGateDir()}`)
+
+      if (recentAnalyses.length === 0) {
+        console.log('  No frames to evaluate')
+        console.log('========== PIPELINE COMPLETE ==========\n')
+        return
+      }
+
+      const concentrationResult = await concentrationGateService.evaluate(
+        recentAnalyses[0], // Current frame
+        recentAnalyses.slice(1) // Previous frames for context
+      )
+      console.log(`  Decision: ${concentrationResult.decision}`)
+      console.log(`  Importance: ${concentrationResult.importance.toFixed(2)}`)
+      console.log(`  Reason: ${concentrationResult.reason}`)
+
+      if (concentrationResult.decision === 'SKIP') {
+        console.log('\n  Concentration gate: SKIP - stopping pipeline for this frame')
+        console.log('========== PIPELINE COMPLETE (SKIPPED) ==========\n')
+        return
+      }
 
       // -----------------------------------------------------------------------
       // Step 3: Suggestion Generation
@@ -364,6 +403,7 @@ class PipelineService {
     return [
       { step: '1. Screenshots', directory: dataStore.getScreenshotsDir() },
       { step: '2. Frame Analysis', directory: frameAnalysisService.getAnalysisDir() },
+      { step: '2.5. Concentration Gate', directory: concentrationGateService.getGateDir() },
       { step: '3. Suggestion Generation', directory: suggestionGenerationService.getGenerationDir() },
       { step: '4. Scoring & Filtering', directory: scoringFilteringService.getScoringDir() },
       { step: '5. Deduplication', directory: deduplicationService.getDeduplicationDir() }
