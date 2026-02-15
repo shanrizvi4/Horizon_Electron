@@ -164,6 +164,11 @@ function animatePopupOpen(onComplete?: () => void): void {
       return
     }
 
+    // Re-apply workspace visibility settings before showing
+    // This helps ensure the popup appears on the current Space
+    popupWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+    popupWindow.setAlwaysOnTop(true, 'screen-saver')
+
     popupWindow.showInactive()
 
     // Start animation immediately after showing
@@ -231,7 +236,7 @@ function createPopupWindow(): Promise<void> {
       }
     })
 
-    // Set window level to float above other windows
+    // Set window level to float above other windows including the Dock
     popupWindow.setAlwaysOnTop(true, 'screen-saver')
 
     // Make visible on all workspaces including fullscreen apps (macOS)
@@ -335,8 +340,10 @@ function hidePopupWindow(): void {
   animatePopupClose(() => {
     isPopupAnimating = false
     if (popupWindow && !popupWindow.isDestroyed()) {
-      // Just hide the window, don't destroy it - prevents re-triggering
-      popupWindow.hide()
+      // Destroy the window instead of hiding it
+      // This ensures a fresh window is created on the current Space next time
+      popupWindow.destroy()
+      popupWindow = null
     }
     notifyPopupVisibilityChange(false)
   })
