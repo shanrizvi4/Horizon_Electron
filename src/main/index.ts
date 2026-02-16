@@ -416,13 +416,22 @@ async function initializeServices(): Promise<void> {
 
   // 5. Start screen capture if enabled in settings
   const settings = dataStore.getSettings()
-  if (settings.recordingEnabled) {
-    screenCaptureService.start()
-    console.log('Screen capture service started')
+  const USE_FAKE_SUGGESTIONS = true // Use fake suggestions for development
 
-    // 6. Start pipeline service (processes screenshots through all 5 steps)
-    pipelineService.start()
-    console.log('Pipeline service started')
+  if (settings.recordingEnabled) {
+    if (USE_FAKE_SUGGESTIONS) {
+      // Use fake suggestions for development
+      const { fakeSuggestionService } = await import('./services/fakeSuggestionService')
+      fakeSuggestionService.start()
+      console.log('Fake suggestion service started')
+    } else {
+      screenCaptureService.start()
+      console.log('Screen capture service started')
+
+      // 6. Start pipeline service (processes screenshots through all 5 steps)
+      pipelineService.start()
+      console.log('Pipeline service started')
+    }
   }
 
   // 7. Initialize mouse tracker for popup trigger
