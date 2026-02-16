@@ -38,7 +38,7 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
 
         <h2 className="onboarding-title">You're All Set!</h2>
         <p className="onboarding-subtitle">
-          Gumbo is ready to help you stay productive. One last thing before we begin:
+          Horizon is ready to help you stay productive. One last thing before we begin:
         </p>
 
         <div className="recording-toggle-card">
@@ -89,7 +89,7 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
           Back
         </button>
         <button className="btn btn-primary btn-lg onboarding-next-btn" onClick={handleComplete}>
-          Start Using Gumbo
+          Start Using Horizon
         </button>
       </div>
     </div>

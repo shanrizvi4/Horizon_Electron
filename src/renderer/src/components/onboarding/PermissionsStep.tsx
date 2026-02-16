@@ -88,7 +88,7 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
       <div className="onboarding-content">
         <h2 className="onboarding-title">Set Up Permissions</h2>
         <p className="onboarding-subtitle">
-          Gumbo needs a few permissions to work properly. We'll guide you through each one.
+          Horizon needs a few permissions to work properly. We'll guide you through each one.
         </p>
 
         <div className="permissions-list">
@@ -130,7 +130,7 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
                 <span className="permission-badge required">Required</span>
               </div>
               <p className="permission-description">
-                Allows Gumbo to capture screenshots and provide intelligent suggestions based on your
+                Allows Horizon to capture screenshots and provide intelligent suggestions based on your
                 screen activity.
               </p>
             </div>
@@ -211,7 +211,7 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
         {!permissions.screenRecording && !checking && (
           <p className="permissions-note">
             After clicking "Grant Permission", System Preferences will open. Toggle the switch next
-            to Gumbo to grant access, then return here.
+            to Horizon to grant access, then return here.
           </p>
         )}
       </div>

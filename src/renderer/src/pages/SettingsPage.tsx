@@ -199,6 +199,31 @@ export function SettingsPage(): React.JSX.Element {
               </div>
             </div>
           </div>
+
+          <div className="settings-section">
+            <h3 className="settings-section-title">Developer</h3>
+            <div className="settings-item">
+              <div className="settings-item-info">
+                <p className="settings-item-label">Show Onboarding</p>
+                <p className="settings-item-description">
+                  Restart the onboarding flow from the beginning
+                </p>
+              </div>
+              <div className="settings-item-control">
+                <button
+                  className="btn btn-secondary"
+                  onClick={async () => {
+                    if (hasElectronAPI()) {
+                      await window.api.settings.update({ hasCompletedOnboarding: false })
+                      window.location.reload()
+                    }
+                  }}
+                >
+                  Show Onboarding
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
