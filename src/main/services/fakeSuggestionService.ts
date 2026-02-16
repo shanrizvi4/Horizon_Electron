@@ -53,6 +53,8 @@ const FAKE_SUGGESTIONS = [
 // SERVICE CLASS
 // =============================================================================
 
+const MAX_SUGGESTIONS = 10
+
 class FakeSuggestionService {
   private intervalId: NodeJS.Timeout | null = null
   private currentIndex = 0
@@ -91,8 +93,16 @@ class FakeSuggestionService {
 
   /**
    * Adds a fake suggestion to the data store.
+   * Stops after MAX_SUGGESTIONS have been added.
    */
   private addFakeSuggestion(): void {
+    // Stop after reaching max
+    if (this.currentIndex >= MAX_SUGGESTIONS) {
+      console.log(`Reached max suggestions (${MAX_SUGGESTIONS}), stopping fake suggestion service`)
+      this.stop()
+      return
+    }
+
     const template = FAKE_SUGGESTIONS[this.currentIndex % FAKE_SUGGESTIONS.length]
     const timestamp = Date.now()
 
@@ -121,7 +131,7 @@ class FakeSuggestionService {
     }
 
     dataStore.addSuggestion(suggestion)
-    console.log(`Added fake suggestion: "${template.title}" (${this.currentIndex + 1}/5 in cycle)`)
+    console.log(`Added fake suggestion: "${template.title}" (${this.currentIndex + 1}/${MAX_SUGGESTIONS})`)
 
     this.currentIndex++
   }
