@@ -22,30 +22,35 @@ const FAKE_SUGGESTIONS = [
     description: 'There\'s an open pull request that needs your review. It includes changes to the authentication flow.',
     approach: 'Open GitHub, navigate to the PR, review the changes and leave feedback.',
     keywords: ['github', 'pull request', 'code review'],
+    initialResponse: 'I noticed PR #142 has been open for a while and includes changes to the authentication flow. Here\'s what I can help you with:\n\n1. **Quick summary** - The PR modifies the login and session handling logic\n2. **Key files changed** - `auth.ts`, `session.ts`, and related tests\n3. **Potential concerns** - Make sure to check the token refresh logic\n\nWould you like me to help you draft review comments or highlight specific areas to focus on?',
   },
   {
     title: 'Respond to Slack message',
     description: 'You have an unread message from the team channel about the upcoming sprint planning.',
     approach: 'Open Slack, read the message, and respond with your availability.',
     keywords: ['slack', 'communication', 'team'],
+    initialResponse: 'I saw there\'s an unread message in your team channel about sprint planning. Based on your calendar, you appear to be free:\n\n- **Tuesday 2-4pm**\n- **Wednesday 10am-12pm**\n- **Thursday 3-5pm**\n\nWould you like me to help draft a response with your availability, or should I check for any conflicts first?',
   },
   {
     title: 'Update project documentation',
     description: 'The README file is outdated and doesn\'t reflect the recent API changes.',
     approach: 'Open the README.md file and update the API endpoints section.',
     keywords: ['documentation', 'readme', 'api'],
+    initialResponse: 'The README hasn\'t been updated since the recent API changes. Here\'s what needs to be documented:\n\n1. **New endpoints** - `/api/v2/users` and `/api/v2/auth`\n2. **Changed parameters** - The `limit` param now defaults to 50\n3. **Deprecated** - `/api/v1/legacy` endpoints\n\nI can help you draft the updated documentation. Should I generate a diff of what needs to change?',
   },
   {
     title: 'Fix failing test',
     description: 'The CI pipeline is showing a failing test in the user authentication module.',
     approach: 'Run the tests locally, identify the issue, and push a fix.',
     keywords: ['testing', 'ci', 'bug fix'],
+    initialResponse: 'The CI is failing on `auth.test.ts` - specifically the "should refresh expired tokens" test case. Looking at the error:\n\n```\nExpected: 200\nReceived: 401\n```\n\nThis suggests the mock token expiry time may need adjustment after the recent auth changes. Would you like me to help debug this or suggest a fix?',
   },
   {
     title: 'Schedule team sync',
     description: 'It\'s been a while since the last team sync. Consider scheduling one for this week.',
     approach: 'Check team calendars and send out a meeting invite.',
     keywords: ['meeting', 'calendar', 'team'],
+    initialResponse: 'It\'s been 2 weeks since your last team sync. Based on everyone\'s availability, here are the best times this week:\n\n- **Wednesday 11am** - All 5 team members available\n- **Thursday 2pm** - 4 of 5 available (Sarah has a conflict)\n\nWould you like me to draft a meeting invite? I can include an agenda based on recent project activity.',
   },
 ]
 
@@ -115,7 +120,7 @@ class FakeSuggestionService {
       status: 'active',
       keywords: template.keywords,
       approach: template.approach,
-      executionOutput: '',
+      executionOutput: template.initialResponse,
       executionSummary: { title: '', description: '' },
       support: 0.7 + Math.random() * 0.3, // Random score between 0.7 and 1.0
       utilities: {

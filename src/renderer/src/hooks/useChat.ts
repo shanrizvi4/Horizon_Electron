@@ -511,17 +511,7 @@ export function useChat(): UseChatReturn {
         associatedSuggestionId: suggestion.suggestionId
       })
 
-      // Add initial prompt as first message (if exists)
-      if (suggestion.initialPrompt) {
-        addMessage(chatId, {
-          role: 'prompt',
-          content: suggestion.initialPrompt,
-          isPlaceholder: false,
-          isError: false
-        })
-      }
-
-      // Add execution output as assistant message (if exists)
+      // Add execution output as first assistant message (if exists)
       if (suggestion.executionOutput) {
         addMessage(chatId, {
           role: 'assistant',

@@ -7,7 +7,7 @@ interface MessageBubbleProps {
   onRetry?: () => void
 }
 
-export function MessageBubble({ message, onRetry }: MessageBubbleProps): React.JSX.Element {
+export function MessageBubble({ message, onRetry }: MessageBubbleProps): React.JSX.Element | null {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async (): Promise<void> => {
@@ -18,6 +18,11 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps): React.J
     } catch (err) {
       console.error('Failed to copy:', err)
     }
+  }
+
+  // Don't render empty messages (except placeholders which show loading indicator)
+  if (!message.content && !message.isPlaceholder) {
+    return null
   }
 
   const bubbleClass = `message-bubble ${message.role} ${message.isError ? 'error' : ''}`
