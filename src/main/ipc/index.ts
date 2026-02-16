@@ -69,6 +69,7 @@ import { registerSettingsHandlers } from './settings'
 import { registerRecordingHandlers } from './recording'
 import { registerStateHandlers } from './state'
 import { registerPopupHandlers } from './popup'
+import { registerPermissionsHandlers } from './permissions'
 
 /**
  * Registers all IPC handlers for the application.
@@ -100,6 +101,7 @@ export function registerAllIpcHandlers(): void {
   // System handlers
   registerStateHandlers() // Multi-window state sync
   registerPopupHandlers() // Popup window management
+  registerPermissionsHandlers() // macOS permissions
 
   console.log('All IPC handlers registered')
 }

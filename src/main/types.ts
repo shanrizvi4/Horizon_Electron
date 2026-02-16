@@ -245,6 +245,12 @@ export interface AppSettings {
 
   /** Whether to disable the popup window */
   disablePopup: boolean
+
+  /** Whether the user has completed the onboarding flow */
+  hasCompletedOnboarding: boolean
+
+  /** Unix timestamp when onboarding was completed */
+  onboardingCompletedAt?: number
 }
 
 // =============================================================================
@@ -412,5 +418,21 @@ export const IPC_CHANNELS = {
   /** Temporarily disable popup auto-close */
   POPUP_DISABLE_AUTO_CLOSE: 'popup:disableAutoClose',
   /** Event: Popup visibility changed */
-  POPUP_VISIBILITY_CHANGE: 'popup:visibilityChange'
+  POPUP_VISIBILITY_CHANGE: 'popup:visibilityChange',
+
+  // ---------------------------------------------------------------------------
+  // PERMISSIONS - macOS permission management
+  // ---------------------------------------------------------------------------
+  /** Check screen recording permission status */
+  PERMISSIONS_CHECK_SCREEN_RECORDING: 'permissions:checkScreenRecording',
+  /** Request screen recording permission */
+  PERMISSIONS_REQUEST_SCREEN_RECORDING: 'permissions:requestScreenRecording',
+  /** Check accessibility permission status */
+  PERMISSIONS_CHECK_ACCESSIBILITY: 'permissions:checkAccessibility',
+  /** Request accessibility permission */
+  PERMISSIONS_REQUEST_ACCESSIBILITY: 'permissions:requestAccessibility',
+  /** Open System Preferences to specific pane */
+  PERMISSIONS_OPEN_PREFERENCES: 'permissions:openPreferences',
+  /** Get all permission statuses */
+  PERMISSIONS_GET_ALL: 'permissions:getAll'
 } as const

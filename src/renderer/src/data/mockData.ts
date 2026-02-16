@@ -489,5 +489,6 @@ export const mockStudyStatus: StudyStatus = {
 export const mockSettings: AppSettings = {
   notificationFrequency: 5,
   recordingEnabled: false,  // Default to OFF
-  disablePopup: false
+  disablePopup: false,
+  hasCompletedOnboarding: true // Mock data assumes onboarding is done
 }

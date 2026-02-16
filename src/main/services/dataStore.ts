@@ -81,7 +81,9 @@ const getDefaultState = (): AppState => ({
   settings: {
     notificationFrequency: 5, // 1-10 scale
     recordingEnabled: false, // Default OFF - user must explicitly enable
-    disablePopup: false
+    disablePopup: false,
+    hasCompletedOnboarding: false, // Show onboarding on first launch
+    onboardingCompletedAt: undefined
   },
 
   // Sync metadata

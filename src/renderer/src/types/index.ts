@@ -104,4 +104,11 @@ export interface AppSettings {
   notificationFrequency: number
   recordingEnabled: boolean
   disablePopup: boolean
+  hasCompletedOnboarding?: boolean
+  onboardingCompletedAt?: number
+}
+
+export interface PermissionStatus {
+  screenRecording: boolean
+  accessibility: boolean
 }

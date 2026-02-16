@@ -180,7 +180,23 @@ const IPC_CHANNELS = {
   /** Temporarily disable popup auto-close */
   POPUP_DISABLE_AUTO_CLOSE: 'popup:disableAutoClose',
   /** Event: Popup visibility changed */
-  POPUP_VISIBILITY_CHANGE: 'popup:visibilityChange'
+  POPUP_VISIBILITY_CHANGE: 'popup:visibilityChange',
+
+  // ---------------------------------------------------------------------------
+  // PERMISSIONS - macOS permission management
+  // ---------------------------------------------------------------------------
+  /** Check screen recording permission status */
+  PERMISSIONS_CHECK_SCREEN_RECORDING: 'permissions:checkScreenRecording',
+  /** Request screen recording permission */
+  PERMISSIONS_REQUEST_SCREEN_RECORDING: 'permissions:requestScreenRecording',
+  /** Check accessibility permission status */
+  PERMISSIONS_CHECK_ACCESSIBILITY: 'permissions:checkAccessibility',
+  /** Request accessibility permission */
+  PERMISSIONS_REQUEST_ACCESSIBILITY: 'permissions:requestAccessibility',
+  /** Open System Preferences to specific pane */
+  PERMISSIONS_OPEN_PREFERENCES: 'permissions:openPreferences',
+  /** Get all permission statuses */
+  PERMISSIONS_GET_ALL: 'permissions:getAll'
 } as const
 
 // =============================================================================
@@ -510,6 +526,40 @@ const api = {
       ipcRenderer.on(IPC_CHANNELS.POPUP_VISIBILITY_CHANGE, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.POPUP_VISIBILITY_CHANGE, listener)
     }
+  },
+
+  // ---------------------------------------------------------------------------
+  // PERMISSIONS API
+  // ---------------------------------------------------------------------------
+
+  /**
+   * macOS permission management.
+   *
+   * Provides methods to check and request system permissions required
+   * for screen recording and accessibility features.
+   */
+  permissions: {
+    /** Check if screen recording permission is granted */
+    checkScreenRecording: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSIONS_CHECK_SCREEN_RECORDING),
+
+    /** Request screen recording permission (triggers system dialog) */
+    requestScreenRecording: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSIONS_REQUEST_SCREEN_RECORDING),
+
+    /** Check if accessibility permission is granted */
+    checkAccessibility: () => ipcRenderer.invoke(IPC_CHANNELS.PERMISSIONS_CHECK_ACCESSIBILITY),
+
+    /** Request accessibility permission (triggers system dialog) */
+    requestAccessibility: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSIONS_REQUEST_ACCESSIBILITY),
+
+    /** Open System Preferences to a specific privacy pane */
+    openPreferences: (pane: 'ScreenCapture' | 'Accessibility') =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSIONS_OPEN_PREFERENCES, pane),
+
+    /** Get all permission statuses at once */
+    getAll: () => ipcRenderer.invoke(IPC_CHANNELS.PERMISSIONS_GET_ALL)
   }
 }
 

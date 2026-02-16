@@ -7,12 +7,13 @@ import './styles/chat.css'
 import './styles/pages.css'
 import './styles/modals.css'
 import './styles/popup.css'
+import './styles/onboarding.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { DataProvider } from './context/DataContext'
 import { NavigationProvider } from './context/NavigationContext'
-import App from './App'
+import { AppWithOnboarding } from './AppWithOnboarding'
 import { PopupApp } from './popup/PopupApp'
 
 // Check if we're in popup mode via query parameter
@@ -22,7 +23,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DataProvider>
       <NavigationProvider>
-        {isPopupMode ? <PopupApp /> : <App />}
+        {isPopupMode ? <PopupApp /> : <AppWithOnboarding />}
       </NavigationProvider>
     </DataProvider>
   </StrictMode>

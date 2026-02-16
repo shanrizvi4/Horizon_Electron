@@ -76,6 +76,13 @@ interface AppSettings {
   notificationFrequency: number
   recordingEnabled: boolean
   disablePopup: boolean
+  hasCompletedOnboarding?: boolean
+  onboardingCompletedAt?: number
+}
+
+interface PermissionStatus {
+  screenRecording: boolean
+  accessibility: boolean
 }
 
 interface StudyStatus {
@@ -165,6 +172,15 @@ interface GumboAPI {
     navigateToChat: (chatId: string) => Promise<{ success: boolean }>
     disableAutoClose: (durationMs?: number) => Promise<{ success: boolean }>
     onVisibilityChange: (callback: (visible: boolean) => void) => () => void
+  }
+
+  permissions: {
+    checkScreenRecording: () => Promise<boolean>
+    requestScreenRecording: () => Promise<boolean>
+    checkAccessibility: () => Promise<boolean>
+    requestAccessibility: () => Promise<boolean>
+    openPreferences: (pane: 'ScreenCapture' | 'Accessibility') => Promise<{ success: boolean }>
+    getAll: () => Promise<PermissionStatus>
   }
 }
 

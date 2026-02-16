@@ -178,6 +178,20 @@ interface AppSettings {
   recordingEnabled: boolean
   /** Whether to disable the popup window */
   disablePopup: boolean
+  /** Whether user has completed onboarding */
+  hasCompletedOnboarding?: boolean
+  /** Unix timestamp when onboarding was completed */
+  onboardingCompletedAt?: number
+}
+
+/**
+ * Permission status for macOS permissions.
+ */
+interface PermissionStatus {
+  /** Screen recording permission status */
+  screenRecording: boolean
+  /** Accessibility permission status */
+  accessibility: boolean
 }
 
 /**
@@ -410,6 +424,28 @@ interface GumboAPI {
      * @returns Cleanup function to unsubscribe
      */
     onVisibilityChange: (callback: (visible: boolean) => void) => () => void
+  }
+
+  // ---------------------------------------------------------------------------
+  // PERMISSIONS
+  // ---------------------------------------------------------------------------
+
+  /**
+   * macOS permission management.
+   */
+  permissions: {
+    /** Check screen recording permission */
+    checkScreenRecording: () => Promise<boolean>
+    /** Request screen recording permission */
+    requestScreenRecording: () => Promise<boolean>
+    /** Check accessibility permission */
+    checkAccessibility: () => Promise<boolean>
+    /** Request accessibility permission */
+    requestAccessibility: () => Promise<boolean>
+    /** Open System Preferences to permission pane */
+    openPreferences: (pane: 'ScreenCapture' | 'Accessibility') => Promise<{ success: boolean }>
+    /** Get all permission statuses */
+    getAll: () => Promise<PermissionStatus>
   }
 }
 
