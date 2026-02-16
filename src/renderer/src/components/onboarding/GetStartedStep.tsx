@@ -24,21 +24,21 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
       <div className="onboarding-content">
         <div className="get-started-icon">
           <svg
-            width="64"
-            height="64"
+            width="40"
+            height="40"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.5"
+            strokeWidth="2"
           >
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
         </div>
 
-        <h2 className="onboarding-title">You're All Set!</h2>
+        <h2 className="onboarding-title">You're All Set</h2>
         <p className="onboarding-subtitle">
-          Horizon is ready to help you stay productive. One last thing before we begin:
+          Horizon is ready to help you stay productive.
         </p>
 
         <div className="recording-toggle-card">
@@ -57,10 +57,9 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
               </svg>
             </div>
             <div className="recording-toggle-info">
-              <h4 className="recording-toggle-title">Enable Screen Recording</h4>
+              <h4 className="recording-toggle-title">Enable Recording</h4>
               <p className="recording-toggle-description">
-                Start capturing your screen activity now. You can always change this later in
-                Settings.
+                Start capturing now. Change this anytime in Settings.
               </p>
             </div>
           </div>
@@ -72,15 +71,6 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
             />
             <span className="toggle-slider"></span>
           </label>
-        </div>
-
-        <div className="get-started-tips">
-          <h4 className="tips-title">Quick Tips</h4>
-          <ul className="tips-list">
-            <li>The popup will appear in the corner of your screen with suggestions</li>
-            <li>Click on a suggestion to open a chat and get help</li>
-            <li>Access settings anytime from the sidebar</li>
-          </ul>
         </div>
       </div>
 

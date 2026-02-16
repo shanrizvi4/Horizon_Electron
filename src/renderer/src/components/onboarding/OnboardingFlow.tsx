@@ -43,28 +43,24 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
   return (
     <div className="onboarding-container">
-      <div className="onboarding-window">
-        {/* Progress indicator */}
-        <div className="onboarding-progress">
-          {STEPS.map((step, index) => (
-            <div
-              key={step}
-              className={`progress-dot ${index === currentStepIndex ? 'active' : ''} ${index < currentStepIndex ? 'completed' : ''}`}
-            />
-          ))}
-        </div>
-
-        {/* Step content */}
-        <div className="onboarding-step-container">
-          {currentStep === 'welcome' && <WelcomeStep onNext={goToNext} />}
-          {currentStep === 'permissions' && (
-            <PermissionsStep onNext={goToNext} onBack={goToPrevious} />
-          )}
-          {currentStep === 'getStarted' && (
-            <GetStartedStep onComplete={handleComplete} onBack={goToPrevious} />
-          )}
-        </div>
+      {/* Progress indicator - top of screen */}
+      <div className="onboarding-progress">
+        {STEPS.map((step, index) => (
+          <div
+            key={step}
+            className={`progress-dot ${index === currentStepIndex ? 'active' : ''} ${index < currentStepIndex ? 'completed' : ''}`}
+          />
+        ))}
       </div>
+
+      {/* Step content - centered */}
+      {currentStep === 'welcome' && <WelcomeStep onNext={goToNext} />}
+      {currentStep === 'permissions' && (
+        <PermissionsStep onNext={goToNext} onBack={goToPrevious} />
+      )}
+      {currentStep === 'getStarted' && (
+        <GetStartedStep onComplete={handleComplete} onBack={goToPrevious} />
+      )}
     </div>
   )
 }
