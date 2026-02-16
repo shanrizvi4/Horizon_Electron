@@ -1,8 +1,39 @@
-# Horizon Electron
+# Horizon
 
-A desktop AI assistant built with Electron, React, and TypeScript. Features a liquid glass UI aesthetic with suggestions, projects, chat, and memory management.
+A system that learns about you and your work to proactively help you get things done. Built with Electron, React, and TypeScript.
 
-## Quick Start
+## Download
+
+**[Download the latest release](https://github.com/shanrizvi4/Horizon_Electron/releases/latest)**
+
+1. Download `gumbo-electron-1.0.0.dmg`
+2. Open the DMG and drag Horizon to Applications
+3. Launch and complete the onboarding flow
+
+> Requires macOS (Apple Silicon)
+
+## Features
+
+- **Intelligent Suggestions** - Analyzes your screen activity to surface helpful suggestions
+- **Popup Notifications** - Non-intrusive popup in the corner with actionable suggestions
+- **Chat Interface** - Discuss suggestions with an AI assistant
+- **Glass Morphism UI** - Modern liquid glass aesthetic with smooth animations
+- **Privacy First** - All processing happens locally, data stays on your machine
+
+## How It Works
+
+```
+Screen Capture → Frame Analysis → Suggestion Generation → Scoring → Deduplication → UI
+```
+
+1. **Screen Capture** - Periodically captures screenshots based on activity
+2. **Frame Analysis** - Transcribes screen content using vision AI
+3. **Suggestion Generation** - Generates actionable suggestions from observations
+4. **Scoring & Filtering** - Ranks suggestions by relevance and urgency
+5. **Deduplication** - Removes duplicate or similar suggestions
+6. **UI** - Displays suggestions in the app and popup notifications
+
+## Development
 
 ```bash
 # Install dependencies
@@ -12,165 +43,182 @@ npm install
 npm run dev
 
 # Build for production
-npm run build:mac    # macOS
-npm run build:win    # Windows
-npm run build:linux  # Linux
+npm run build:mac
 ```
 
 ## Project Structure
 
 ```
 src/
-├── main/                    # Electron main process
-│   └── index.ts            # Main entry, creates browser window
-├── preload/                 # Preload scripts (bridge between main & renderer)
+├── main/                       # Electron main process
+│   ├── index.ts               # App entry, window management
+│   ├── services/              # Backend services
+│   │   ├── screenCapture.ts   # Screenshot capture
+│   │   ├── pipelineService.ts # Orchestrates the suggestion pipeline
+│   │   ├── frameAnalysisService.ts
+│   │   ├── suggestionGenerationService.ts
+│   │   ├── scoringFilteringService.ts
+│   │   ├── deduplicationService.ts
+│   │   ├── dataStore.ts       # Persistent state management
+│   │   ├── mouseTracker.ts    # Popup trigger detection
+│   │   └── permissionsService.ts
+│   ├── ipc/                   # IPC handlers
+│   │   ├── recording.ts       # Recording control
+│   │   ├── permissions.ts     # macOS permissions
+│   │   ├── suggestions.ts
+│   │   ├── chats.ts
+│   │   └── ...
+│   └── types.ts               # Shared types
+│
+├── preload/                   # Bridge between main & renderer
 │   └── index.ts
-└── renderer/               # React frontend (the actual UI)
+│
+└── renderer/                  # React frontend
     └── src/
-        ├── App.tsx         # Root component
-        ├── main.tsx        # React entry point
-        ├── types/          # TypeScript type definitions
-        ├── context/        # React contexts (global state)
-        ├── hooks/          # Custom React hooks
-        ├── pages/          # Page components
-        ├── components/     # Reusable UI components
-        ├── styles/         # CSS files
-        └── data/           # Mock data
+        ├── main.tsx           # React entry
+        ├── AppWithOnboarding.tsx
+        ├── pages/             # Page components
+        │   ├── SuggestionsPage.tsx
+        │   ├── ChatPage.tsx
+        │   ├── SettingsPage.tsx
+        │   └── ...
+        ├── components/
+        │   ├── onboarding/    # Onboarding flow
+        │   ├── layout/        # Sidebar, content area
+        │   ├── suggestions/   # Suggestion cards
+        │   ├── chat/          # Chat interface
+        │   └── ...
+        ├── context/           # React contexts
+        ├── styles/            # CSS
+        └── popup/             # Popup window UI
 ```
 
-## Key Directories
+## Architecture
 
-### `/pages`
-Full-page views rendered based on navigation state:
-- `SuggestionsPage.tsx` - Main dashboard with AI suggestions
-- `ProjectsPage.tsx` - List of all projects
-- `ProjectDetailsPage.tsx` - Individual project view
-- `ChatPage.tsx` - Conversation interface
-- `UserModelPage.tsx` - Memory/stored facts about user
-- `CustomizeAgentPage.tsx` - AI personality settings
-- `SettingsPage.tsx` - App settings
+### Main Process Services
 
-### `/components`
-Reusable UI components organized by feature:
+| Service | Purpose |
+|---------|---------|
+| `screenCaptureService` | Captures screenshots based on mouse activity |
+| `pipelineService` | Orchestrates the 5-step suggestion pipeline |
+| `frameAnalysisService` | Transcribes screenshots using vision AI |
+| `suggestionGenerationService` | Generates suggestions from transcriptions |
+| `scoringFilteringService` | Scores and filters suggestions |
+| `deduplicationService` | Removes duplicate suggestions |
+| `dataStore` | Persists state to `data/state.json` |
+| `mouseTrackerService` | Detects mouse in corner to trigger popup |
+| `permissionsService` | Manages macOS permissions |
+
+### IPC Channels
+
+Communication between main and renderer processes:
+
+- `recording:start/stop/getStatus` - Control screen capture
+- `suggestions:*` - CRUD operations for suggestions
+- `chats:*` - Chat management
+- `permissions:*` - Permission checks and requests
+- `state:onUpdate` - Real-time state sync to renderer
+
+### Data Flow
+
 ```
-components/
-├── layout/
-│   ├── Sidebar.tsx         # Main navigation sidebar
-│   └── ContentArea.tsx     # Main content wrapper
-├── common/
-│   ├── SearchBar.tsx
-│   ├── SortToggle.tsx
-│   ├── BackButton.tsx
-│   └── TimeGroupHeader.tsx
-├── suggestions/
-│   ├── SuggestionCard.tsx
-│   ├── SuggestionList.tsx
-│   └── SuggestionActions.tsx
-├── projects/
-│   ├── ProjectCard.tsx
-│   └── ProjectHeader.tsx
-├── chat/
-│   ├── ChatView.tsx
-│   ├── MessageBubble.tsx
-│   ├── MessageInput.tsx
-│   └── StreamingIndicator.tsx
-└── modals/
-    ├── Modal.tsx           # Base modal component
-    └── [specific modals]
+Main Process                          Renderer Process
+─────────────                         ────────────────
+screenCapture → pipeline → dataStore ──IPC──→ DataContext → Components
+                               ↑
+                          state.json
 ```
 
-### `/context`
-Global state management using React Context:
-- `NavigationContext.tsx` - Current page, selected chat/project, navigation history
-- `DataContext.tsx` - All app data (suggestions, projects, chats, user model)
+## Onboarding
 
-### `/hooks`
-Custom hooks that encapsulate logic:
-- `useNavigation.ts` - Navigation actions (navigateTo, goBack, openChat, etc.)
-- `useSuggestions.ts` - Suggestion filtering, sorting, actions
-- `useProjects.ts` - Project CRUD operations
-- `useChat.ts` - Chat message handling
+First-time users go through a 3-step onboarding:
 
-### `/styles`
-CSS organized by concern:
-- `variables.css` - Design tokens (colors, spacing, typography, etc.)
-- `global.css` - Base styles, buttons, inputs, utilities
-- `layout.css` - Page layouts, grids, content areas
-- `sidebar.css` - Sidebar-specific styles
-- `cards.css` - Suggestion and project cards
-- `chat.css` - Chat interface styles
-- `pages.css` - Page-specific styles (settings, memory, etc.)
-- `modals.css` - Modal styles
+1. **Welcome** - Introduction to Horizon
+2. **Permissions** - Request screen recording (required) and accessibility (optional)
+3. **Get Started** - Enable recording and launch
+
+## Popup
+
+A popup window appears in the bottom-left corner when the mouse moves there. Shows the latest suggestions for quick access.
 
 ## Design System
 
-### Colors
-The app uses a muted blue-grey palette with cream/beige text:
-- Base: `#46576B` (blue-grey)
-- Text: `#D6CCBA` (cream)
-- Backgrounds: `rgba(255, 255, 255, 0.1)` layers
+### Themes
+
+Three themes available: Dusk (default), Light, Dark
 
 ### Liquid Glass Effect
-Key elements use a "liquid glass" effect:
+
 ```css
-background: rgba(40, 48, 61, 0.75);
-backdrop-filter: blur(12px);
-border: 1px solid rgba(255, 255, 255, 0.1);
-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+background: rgba(var(--glass-rgb), 0.06);
+backdrop-filter: blur(10px);
+border-radius: var(--radius-xl);
+
+/* Liquid glass border */
+&::before {
+  background: linear-gradient(135deg,
+    rgba(var(--glass-rgb), 0.18) 0%,
+    rgba(var(--glass-rgb), 0.02) 50%,
+    rgba(var(--glass-rgb), 0.18) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+}
 ```
 
-### Text Shadows
-For readability on glass surfaces:
-```css
-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+### Colors (Dusk Theme)
+
+- Background: `#46576B`
+- Glass overlay: `rgba(255, 255, 255, 0.06)`
+- Text heading: `#E8E4DF`
+- Text primary: `#D6CCBA`
+
+## Configuration
+
+### Environment Variables
+
+For LLM integration, set in `.env`:
+
+```
+GEMINI_API_KEY=your_api_key
 ```
 
-## Navigation
+### Settings
 
-Navigation is managed through `NavigationContext`. Key concepts:
-- `currentPage` - Which main page is shown (suggestions, projects, settings, etc.)
-- `selectedChatId` - When set, shows ChatPage
-- `selectedProjectId` - When set, shows ProjectDetailsPage
-- History is tracked for back navigation
+User settings stored in `data/state.json`:
 
-```tsx
-const { navigateTo, openChat, openProject, goBack } = useNavigation()
+- `recordingEnabled` - Whether screen capture is active
+- `notificationFrequency` - How often to show suggestions
+- `disablePopup` - Disable popup notifications
+- `hasCompletedOnboarding` - Skip onboarding on launch
 
-navigateTo('settings')     // Go to settings page
-openChat('chat-123')       // Open a specific chat
-openProject('proj-456')    // Open a project
-goBack()                   // Return to previous state
+## Building
+
+```bash
+# macOS (Apple Silicon)
+npm run build:mac
+
+# Output: dist/gumbo-electron-1.0.0.dmg
 ```
 
-## Data Flow
+### Code Signing
 
-1. `DataContext` holds all app state (suggestions, projects, chats, user propositions)
-2. Components read state via `useData()` hook
-3. Actions dispatch to reducer: `dispatch({ type: 'ACTION_TYPE', payload: {...} })`
-4. Mock data in `/data/mockData.ts` seeds initial state
+For distribution, set environment variables:
 
-## Development Tips
+```
+APPLE_ID=your@email.com
+APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
+APPLE_TEAM_ID=XXXXXXXXXX
+```
 
-### Adding a New Page
-1. Create component in `/pages/NewPage.tsx`
-2. Add page type to `/types/index.ts`
-3. Add route in `ContentArea.tsx`
-4. Add sidebar nav item in `Sidebar.tsx`
+Then enable in `electron-builder.yml`:
 
-### Adding Styles
-1. Use CSS variables from `variables.css`
-2. Follow the glass effect pattern for interactive elements
-3. Add text-shadow to text on glass surfaces
-4. Use `rgba(255, 255, 255, x)` for borders/backgrounds
+```yaml
+mac:
+  hardenedRuntime: true
+  notarize: true
+```
 
-### Component Patterns
-- Pages handle layout and data fetching
-- Components are presentational where possible
-- Hooks encapsulate business logic
-- Context provides global state
+## License
 
-## IDE Setup
-
-Recommended: [VS Code](https://code.visualstudio.com/) with:
-- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+MIT
