@@ -36,6 +36,13 @@ import type { FrameAnalysis } from './frameAnalysisService'
 const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
 
+/**
+ * Importance threshold for skipping frames.
+ * Frames with importance below this value will be skipped.
+ * Set low (0.3) to be conservative and skip only very low-value activity.
+ */
+const IMPORTANCE_THRESHOLD = 0.3
+
 // =============================================================================
 // TYPE DEFINITIONS
 // =============================================================================
@@ -151,6 +158,12 @@ class ConcentrationGateService {
     } else {
       console.log('\n--- CONCENTRATION GATE (hardcoded mode) ---')
       result = this.evaluateHardcoded(currentFrame, recentFrames)
+    }
+
+    // Apply importance threshold: skip if below threshold
+    if (result.importance < IMPORTANCE_THRESHOLD && result.decision === 'CONTINUE') {
+      result.decision = 'SKIP'
+      result.reason = `${result.reason} (importance ${result.importance.toFixed(2)} below threshold ${IMPORTANCE_THRESHOLD})`
     }
 
     // Save result to disk
