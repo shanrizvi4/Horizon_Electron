@@ -6,3 +6,4 @@ out
 *.log*
 config.json
 data/
+.env
