@@ -29,11 +29,11 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize:
-    teamId: ${env.APPLE_TEAM_ID}
+  # Set to true when APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, and APPLE_TEAM_ID are configured
+  notarize: false
 dmg:
   artifactName: ${name}-${version}.${ext}
-  background: build/background.png
+  # background: build/background.png  # Uncomment when background images are added
   window:
     width: 540
     height: 380
