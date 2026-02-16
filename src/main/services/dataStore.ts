@@ -99,10 +99,11 @@ const getDefaultState = (): AppState => ({
  * Resolves the data directory path.
  *
  * In development: Uses <projectRoot>/data/
- * In production: Uses <appPath>/data/
+ * In production: Uses <userData>/data/ (~/Library/Application Support/<appName>/data/)
  *
  * This ensures data persists in the project folder during development
- * for easy inspection and debugging.
+ * for easy inspection and debugging, while using the proper user data
+ * directory in production (which is writable and persists across updates).
  */
 function getProjectDataDir(): string {
   const isDev = !app.isPackaged
@@ -111,8 +112,8 @@ function getProjectDataDir(): string {
     // Development: __dirname is in out/main, go up to project root
     return path.join(__dirname, '..', '..', 'data')
   } else {
-    // Production: use app installation path
-    return path.join(app.getAppPath(), 'data')
+    // Production: use user data directory (~/Library/Application Support/<appName>/)
+    return path.join(app.getPath('userData'), 'data')
   }
 }
 

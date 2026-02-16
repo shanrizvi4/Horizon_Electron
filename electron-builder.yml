@@ -20,10 +20,11 @@ nsis:
   createDesktopShortcut: always
 mac:
   category: public.app-category.productivity
-  hardenedRuntime: true
+  # hardenedRuntime requires proper code signing - enable when you have Apple Developer credentials
+  hardenedRuntime: false
   gatekeeperAssess: false
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
+  # entitlements: build/entitlements.mac.plist
+  # entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
