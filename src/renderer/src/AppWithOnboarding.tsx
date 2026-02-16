@@ -8,19 +8,17 @@
 import React, { useState, useEffect } from 'react'
 import App from './App'
 import { OnboardingFlow } from './components/onboarding'
-import { useData } from './context/DataContext'
 
 const hasElectronAPI = (): boolean => {
   return typeof window !== 'undefined' && window.api?.settings !== undefined
 }
 
 export const AppWithOnboarding: React.FC = () => {
-  const { state } = useData()
   const [loading, setLoading] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
-    // Check if user has completed onboarding
+    // Check if user has completed onboarding by fetching directly from backend
     const checkOnboarding = async () => {
       if (!hasElectronAPI()) {
         // In dev/browser environment, skip onboarding
@@ -30,8 +28,12 @@ export const AppWithOnboarding: React.FC = () => {
       }
 
       try {
-        // Use state from context which is already loaded
-        if (state.settings?.hasCompletedOnboarding === false) {
+        // Fetch settings directly from backend to get the real state
+        const settings = await window.api.settings.get()
+        console.log('Onboarding check - settings:', settings)
+
+        // Show onboarding if not completed (false or undefined)
+        if (!settings.hasCompletedOnboarding) {
           setShowOnboarding(true)
         } else {
           setShowOnboarding(false)
@@ -44,10 +46,8 @@ export const AppWithOnboarding: React.FC = () => {
       }
     }
 
-    // Wait a tick for state to be available
-    const timeout = setTimeout(checkOnboarding, 100)
-    return () => clearTimeout(timeout)
-  }, [state.settings?.hasCompletedOnboarding])
+    checkOnboarding()
+  }, [])
 
   const handleOnboardingComplete = async (enableRecording: boolean) => {
     if (!hasElectronAPI()) {
