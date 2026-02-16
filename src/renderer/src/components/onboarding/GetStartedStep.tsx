@@ -38,7 +38,7 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
 
         <h2 className="onboarding-title">You're Ready</h2>
         <p className="onboarding-subtitle">
-          Horizon will work quietly in the background, surfacing insights when they matter.
+          Horizon will work quietly in the background, surfacing helpful suggestions when they matter.
         </p>
 
         <div className="recording-toggle-card">

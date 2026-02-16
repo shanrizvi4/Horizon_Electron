@@ -17,7 +17,7 @@ export const WelcomeStep: React.FC<WelcomeStepProps> = ({ onNext }) => {
       <div className="onboarding-content">
         <h1 className="welcome-title">Welcome to Horizon</h1>
         <p className="welcome-description">
-          An AI that learns how you work and proactively helps you get things done.
+          A system that learns about you and your work to proactively help you get things done.
         </p>
       </div>
 
