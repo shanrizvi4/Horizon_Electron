@@ -294,45 +294,83 @@ textarea {
   background-color: rgba(var(--glass-rgb), 0.1);
 }
 
-/* Sort toggle */
+/* Sort Toggle - Liquid Glass Segmented Control */
 .sort-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: rgba(var(--glass-rgb), 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius-lg);
+  padding: 3px;
   margin-left: auto;
+  position: relative;
 }
 
+/* Liquid glass border */
 .sort-toggle::before {
-  content: 'Sort:';
-  margin-right: 4px;
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: .5px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.15) 0%,
+    rgba(var(--glass-rgb), 0.05) 50%,
+    rgba(var(--glass-rgb), 0.15) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Sliding indicator */
+.sort-toggle-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  background-color: rgba(var(--glass-rgb), 0.08);
+  border-radius: calc(var(--radius-lg) - 3px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: left var(--transition-normal);
+  pointer-events: none;
+}
+
+.sort-toggle-indicator.right {
+  left: calc(50%);
 }
 
 .sort-toggle-btn {
-  padding: 0;
+  position: relative;
+  padding: 6px 16px;
   background: none;
   border: none;
   color: var(--text-muted);
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: color var(--transition-fast);
-  text-decoration: none;
+  border-radius: calc(var(--radius-lg) - 3px);
+  z-index: 1;
+  text-align: center;
 }
 
-.sort-toggle-btn:hover {
-  color: var(--text-primary);
+.sort-toggle-btn:hover:not(.active) {
+  color: var(--text-secondary);
 }
 
 .sort-toggle-btn.active {
   color: var(--text-heading);
-  font-weight: var(--font-weight-semibold);
-}
-
-.sort-toggle-divider {
-  color: var(--text-disabled);
 }
 
 /* Scrollbars - subtle and elegant */

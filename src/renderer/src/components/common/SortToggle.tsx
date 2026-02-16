@@ -9,13 +9,13 @@ interface SortToggleProps {
 export function SortToggle({ value, onChange }: SortToggleProps): React.JSX.Element {
   return (
     <div className="sort-toggle">
+      <div className={`sort-toggle-indicator ${value === 'importance' ? 'right' : ''}`} />
       <button
         className={`sort-toggle-btn ${value === 'recent' ? 'active' : ''}`}
         onClick={() => onChange('recent')}
       >
         Recent
       </button>
-      <span className="sort-toggle-divider">/</span>
       <button
         className={`sort-toggle-btn ${value === 'importance' ? 'active' : ''}`}
         onClick={() => onChange('importance')}
