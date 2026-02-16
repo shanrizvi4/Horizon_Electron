@@ -88,36 +88,20 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
       <div className="onboarding-content">
         <h2 className="onboarding-title">Set Up Permissions</h2>
         <p className="onboarding-subtitle">
-          Horizon needs a few permissions to work properly. We'll guide you through each one.
+          Horizon needs a few permissions to understand your workflow.
         </p>
 
         <div className="permissions-list">
           {/* Screen Recording - Required */}
-          <div
-            className={`permission-card ${permissions.screenRecording ? 'granted' : ''}`}
-          >
+          <div className={`permission-card ${permissions.screenRecording ? 'granted' : ''}`}>
             <div className="permission-icon">
               {permissions.screenRecording ? (
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               ) : (
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
                   <line x1="8" y1="21" x2="16" y2="21" />
                   <line x1="12" y1="17" x2="12" y2="21" />
@@ -130,8 +114,7 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
                 <span className="permission-badge required">Required</span>
               </div>
               <p className="permission-description">
-                Allows Horizon to capture screenshots and provide intelligent suggestions based on your
-                screen activity.
+                Allows Horizon to see what you're working on and provide relevant suggestions.
               </p>
             </div>
             <div className="permission-action">
@@ -140,42 +123,23 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
               ) : checking ? (
                 <span className="permission-status checking">Checking...</span>
               ) : (
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={handleRequestScreenRecording}
-                >
-                  Grant Permission
+                <button className="permission-btn" onClick={handleRequestScreenRecording}>
+                  Grant Access
                 </button>
               )}
             </div>
           </div>
 
           {/* Accessibility - Optional */}
-          <div
-            className={`permission-card ${permissions.accessibility ? 'granted' : ''}`}
-          >
+          <div className={`permission-card ${permissions.accessibility ? 'granted' : ''}`}>
             <div className="permission-icon">
               {permissions.accessibility ? (
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               ) : (
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 8v4l3 3" />
                 </svg>
@@ -187,8 +151,7 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
                 <span className="permission-badge optional">Optional</span>
               </div>
               <p className="permission-description">
-                Enables enhanced features like automatic popup positioning and better window
-                tracking.
+                Enables enhanced features like automatic popup positioning.
               </p>
             </div>
             <div className="permission-action">
@@ -197,11 +160,8 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
               ) : checking ? (
                 <span className="permission-status checking">Checking...</span>
               ) : (
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={handleRequestAccessibility}
-                >
-                  Grant Permission
+                <button className="permission-btn secondary" onClick={handleRequestAccessibility}>
+                  Grant Access
                 </button>
               )}
             </div>
@@ -210,18 +170,17 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
 
         {!permissions.screenRecording && !checking && (
           <p className="permissions-note">
-            After clicking "Grant Permission", System Preferences will open. Toggle the switch next
-            to Horizon to grant access, then return here.
+            System Preferences will open. Toggle the switch next to Horizon, then return here.
           </p>
         )}
       </div>
 
       <div className="onboarding-actions">
-        <button className="btn btn-ghost" onClick={onBack}>
+        <button className="onboarding-btn-ghost" onClick={onBack}>
           Back
         </button>
         <button
-          className="btn btn-primary btn-lg onboarding-next-btn"
+          className="onboarding-btn-primary"
           onClick={onNext}
           disabled={!canContinue}
         >

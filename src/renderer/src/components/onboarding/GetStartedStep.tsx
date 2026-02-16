@@ -36,9 +36,9 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
           </svg>
         </div>
 
-        <h2 className="onboarding-title">You're All Set</h2>
+        <h2 className="onboarding-title">You're Ready</h2>
         <p className="onboarding-subtitle">
-          Horizon is ready to help you stay productive.
+          Horizon will work quietly in the background, surfacing insights when they matter.
         </p>
 
         <div className="recording-toggle-card">
@@ -57,9 +57,9 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
               </svg>
             </div>
             <div className="recording-toggle-info">
-              <h4 className="recording-toggle-title">Enable Recording</h4>
+              <h4 className="recording-toggle-title">Start Recording</h4>
               <p className="recording-toggle-description">
-                Start capturing now. Change this anytime in Settings.
+                Begin learning from your activity now. You can change this anytime.
               </p>
             </div>
           </div>
@@ -75,11 +75,11 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
       </div>
 
       <div className="onboarding-actions">
-        <button className="btn btn-ghost" onClick={onBack}>
+        <button className="onboarding-btn-ghost" onClick={onBack}>
           Back
         </button>
-        <button className="btn btn-primary btn-lg onboarding-next-btn" onClick={handleComplete}>
-          Start Using Horizon
+        <button className="onboarding-btn-primary" onClick={handleComplete}>
+          Launch Horizon
         </button>
       </div>
     </div>

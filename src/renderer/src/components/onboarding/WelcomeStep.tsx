@@ -15,14 +15,14 @@ export const WelcomeStep: React.FC<WelcomeStepProps> = ({ onNext }) => {
   return (
     <div className="onboarding-step welcome-step">
       <div className="onboarding-content">
-        <h1 className="welcome-title">Horizon</h1>
+        <h1 className="welcome-title">Welcome to Horizon</h1>
         <p className="welcome-description">
-          Your AI-powered productivity assistant. Let's get you set up in just a few steps.
+          An AI that learns how you work and proactively helps you get things done.
         </p>
       </div>
 
       <div className="onboarding-actions">
-        <button className="btn btn-primary btn-lg onboarding-next-btn" onClick={onNext}>
+        <button className="onboarding-btn-primary" onClick={onNext}>
           Get Started
         </button>
       </div>
