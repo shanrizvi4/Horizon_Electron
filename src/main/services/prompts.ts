@@ -58,42 +58,67 @@ Should we generate suggestions for this activity?`
 // STEP 2: FRAME ANALYSIS PROMPTS
 // ============================================================
 export const FRAME_ANALYSIS_PROMPTS = {
-  system: `You are an AI assistant that analyzes screenshots of a user's computer screen.
-Your job is to describe what the user is doing, what applications they're using, and extract relevant keywords.
+  system: `Transcribe in markdown ALL the content from the screenshot of the user's screen.
 
-Respond in JSON format with this structure:
+NEVER SUMMARIZE ANYTHING. You must transcribe everything EXACTLY, word for word. Don't repeat yourself.
+
+Include:
+- ALL text visible on screen (every word, every label, every piece of content)
+- All application names and window titles
+- All file paths and folder names visible
+- All website URLs and browser tab titles
+- All code snippets, terminal output, chat messages
+- All notifications, alerts, popups, and their content
+- All button labels, menu items, sidebar content
+- All names, dates, numbers, email addresses visible
+
+Respond in JSON format:
 {
-  "description": "A 1-2 sentence description of what the user appears to be doing",
-  "activities": ["activity1", "activity2", ...],
+  "transcription": "Complete word-for-word markdown transcription of everything on screen",
   "applications": ["app1", "app2", ...],
-  "keywords": ["keyword1", "keyword2", ...]
+  "urls": ["any visible URLs"],
+  "filePaths": ["any visible file paths"],
+  "activities": ["what the user appears to be doing"],
+  "keywords": ["important", "terms", "names", "projects", ...]
 }
 
-Be specific but concise. Focus on actionable observations.`,
+The transcription must be complete enough that someone could reconstruct exactly what was on screen.`,
 
-  user: (imagePath: string) => `Analyze this screenshot and describe what the user is doing.
+  user: (imagePath: string) => `Transcribe this screenshot. Include every piece of text visible, word for word. Do not summarize.
 
-Image: ${imagePath}
-
-Provide your analysis in JSON format.`
+Provide the complete transcription in JSON format.`
 }
 
 // ============================================================
 // STEP 3: SUGGESTION GENERATION PROMPTS
 // ============================================================
 export const SUGGESTION_GENERATION_PROMPTS = {
-  system: `You are an AI assistant that generates helpful suggestions based on a user's recent computer activity.
-You will be given frame analyses describing what the user has been doing.
+  system: `You are a helpful AI assistant. Based on a transcription of what the user is seeing on their screen, generate concrete suggestions that would help them.
 
-Generate 1-3 actionable suggestions that could help the user be more productive or effective.
+Generate 1-3 actionable suggestions. Each suggestion should have:
+- title: A highly specific title mentioning exactly where and how you could help
+- description: Why this suggestion would be helpful
+- approach: Brief, high-level steps from now to completion. Be extremely specific and ensure each step is actionable by the user or an AI assistant. Don't reference external tools or programs.
+- keywords: Keywords helpful for retrieval (include project names when possible)
+- supportEvidence: What from the transcription supports this suggestion? Note anything missing.
+- rawSupport: 1-10 score for how much information you have to actually complete this task
+  - 1 = You don't have the information needed
+  - 10 = You have everything needed to comprehensively complete it
 
-Each suggestion should have:
-- title: A concise action-oriented title (e.g., "Review API documentation")
-- description: A 1-2 sentence explanation of why this would be helpful
-- approach: How to accomplish this task
-- keywords: Relevant keywords for this suggestion
-- supportEvidence: Which observations led to this suggestion
-- rawSupport: A score from 1-10 indicating confidence in this suggestion
+PRINCIPLES - You must follow these:
+- Provide actionable and SPECIFIC recommendations
+- Assign high support scores (8-10) only when fully justified by the transcription
+- Ensure suggestions are distinct and not similar to each other
+- Think beyond what is on screen - explore additional possibilities and approaches
+- Incorporate external ideas, best practices, or creative solutions when reasonable
+
+AVOID - Do not generate suggestions that:
+- Are menial or purely organizational
+- Are trivial or self-evident (e.g., clicking a clearly labeled button)
+- Tell the user to do something they are ALREADY doing or in the process of doing
+- The user or an AI assistant could not reasonably complete
+- Are too high-level or generic
+- You yourself don't have a clear idea of what the path to success looks like
 
 Respond in JSON format:
 {
@@ -103,94 +128,114 @@ Respond in JSON format:
       "description": "...",
       "approach": "...",
       "keywords": ["..."],
-      "supportEvidence": ["..."],
+      "supportEvidence": "...",
       "rawSupport": 7
     }
   ]
 }`,
 
-  user: (frameAnalyses: string, userPropositions: string) => `Based on the user's recent activity, generate helpful suggestions.
+  user: (frameAnalyses: string, userPropositions: string) => `Based on the user's screen activity, generate helpful suggestions.
 
-Recent Activity Analysis:
+Screen Transcription:
 ${frameAnalyses}
 
-User Preferences/Context:
+User Context/Preferences:
 ${userPropositions || "No user preferences available."}
 
-Generate actionable suggestions in JSON format.`
+Generate specific, actionable suggestions in JSON format.`
 }
 
 // ============================================================
 // STEP 4: SCORING & FILTERING PROMPTS
 // ============================================================
 export const SCORING_FILTERING_PROMPTS = {
-  system: `You are an AI assistant that evaluates and scores suggestions for relevance and usefulness.
+  system: `You evaluate suggestions for a user based on their current screen activity.
 
-For each suggestion, provide scores from 0.0 to 1.0:
-- benefit: How beneficial would this suggestion be if followed?
-- urgency: How time-sensitive is this suggestion?
-- confidence: How confident are you that this suggestion is appropriate?
-- relevance: How relevant is this to the user's current work?
+For each suggestion, provide scores from 1-10:
 
-Also determine if the suggestion should pass the filter (combined score >= 0.5).
+1. **benefit**: "How beneficial will assistance on this suggestion be?"
+   Consider:
+   - How inherently simple or trivial is this? Self-evident actions score lower.
+   - How generic is the suggestion? Generic suggestions score lower.
+   - Is the user already doing this? If so, additional value may be low.
+   - The scale of improvement the assistance can provide.
+   Take a CONSERVATIVE approach - don't over-score benefit.
+
+2. **disruptionCost**: "How disruptive would unsolicited assistance be?" (false positive cost)
+   Consider:
+   - How might this interfere with the user's current workflow or focus?
+   - Is this suggestion useful for what the user is actively focused on?
+   1 = not disruptive, 10 = highly disruptive
+
+3. **missCost**: "How critical is it for the user to receive this if they need it?" (false negative cost)
+   Consider:
+   - Severity of potential challenges without this suggestion
+   - How likely the task is to fail without intervention
+   1 = no impact, 10 = significant negative impact
+
+4. **decay**: "How much does the benefit diminish over time?"
+   Consider:
+   - Immediacy of the task's needs or deadlines
+   - Whether the task becomes irrelevant if not addressed promptly
+   1 = obsolete unless acted on immediately, 10 = still useful hours later
 
 Respond in JSON format:
 {
   "scores": {
-    "benefit": 0.75,
-    "urgency": 0.5,
-    "confidence": 0.8,
-    "relevance": 0.7
+    "benefit": 7,
+    "disruptionCost": 3,
+    "missCost": 6,
+    "decay": 8
   },
   "filterDecision": {
     "passed": true,
-    "reason": "High benefit and relevance scores"
+    "reason": "High benefit with low disruption cost"
   }
-}`,
+}
 
-  user: (suggestion: string, userContext: string) => `Evaluate this suggestion and provide scores.
+A suggestion passes if: benefit >= 5 AND disruptionCost <= 6`,
+
+  user: (suggestion: string, userContext: string) => `Evaluate this suggestion based on the user's current activity.
 
 Suggestion:
 ${suggestion}
 
-User Context:
+Current Screen Activity:
 ${userContext || "No additional context available."}
 
-Provide your scoring in JSON format.`
+Provide your evaluation in JSON format.`
 }
 
 // ============================================================
 // STEP 5: DEDUPLICATION PROMPTS
 // ============================================================
 export const DEDUPLICATION_PROMPTS = {
-  system: `You are an AI assistant that determines if two suggestions are duplicates or very similar.
+  system: `Determine the relationship between two suggestions.
 
-Compare the two suggestions and provide:
-- similarity: A score from 0.0 to 1.0 (1.0 = identical, 0.0 = completely different)
-- isDuplicate: true if similarity >= 0.7
-- reason: Brief explanation of your assessment
+Classify their relationship into one of these categories:
 
-Consider suggestions duplicates if they:
-- Recommend the same action
-- Address the same problem
-- Would result in the same outcome
+(A) COMBINE - The suggestions are similar and could be combined into one.
+(B) RELATED - The suggestions are different but might be related through a broad goal.
+(C) DIFFERENT - The suggestions are fundamentally different, addressing separate objectives.
+
+Ignore irrelevant context when making a final classification.
 
 Respond in JSON format:
 {
-  "similarity": 0.85,
-  "isDuplicate": true,
-  "reason": "Both suggestions recommend reviewing the same documentation"
+  "classification": "A" | "B" | "C",
+  "isDuplicate": true if classification is "A", false otherwise,
+  "reason": "Brief explanation"
 }`,
 
-  user: (suggestion1: string, suggestion2: string) => `Compare these two suggestions and determine if they are duplicates.
+  user: (suggestion1: string, suggestion2: string) => `Compare these two suggestions.
 
-Suggestion 1:
+Suggestion A:
 ${suggestion1}
 
-Suggestion 2:
+Suggestion B:
 ${suggestion2}
 
-Provide your comparison in JSON format.`
+Classify their relationship (A=combine, B=related, C=different).`
 }
 
 // ============================================================
@@ -214,10 +259,20 @@ export function formatFrameAnalysesForPrompt(analyses: Array<{
     description: string
     activities: string[]
     applications: string[]
+    keywords?: string[]
   }
   timestamp: number
 }>): string {
-  return analyses.map((a, i) => `[${i + 1}] ${a.analysis.description}
-   Activities: ${a.analysis.activities.join(', ')}
-   Applications: ${a.analysis.applications.join(', ')}`).join('\n\n')
+  return analyses.map((a, i) => {
+    const transcription = a.analysis?.description || 'No transcription'
+    const activities = a.analysis?.activities || []
+    const applications = a.analysis?.applications || []
+    const keywords = a.analysis?.keywords || []
+    return `--- Frame ${i + 1} ---
+${transcription}
+
+Applications: ${applications.join(', ') || 'None detected'}
+Activities: ${activities.join(', ') || 'None detected'}
+Keywords: ${keywords.slice(0, 20).join(', ') || 'None'}`
+  }).join('\n\n')
 }

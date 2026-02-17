@@ -54,12 +54,15 @@ import { ipcMain, BrowserWindow } from 'electron'
 import { screenCaptureService } from '../services/screenCapture'
 import { pipelineService } from '../services/pipelineService'
 import { frameAnalysisService } from '../services/frameAnalysisService'
+import { suggestionGenerationService } from '../services/suggestionGenerationService'
+import { scoringFilteringService } from '../services/scoringFilteringService'
+import { deduplicationService } from '../services/deduplicationService'
 import { fakeSuggestionService } from '../services/fakeSuggestionService'
 import { dataStore } from '../services/dataStore'
 import { IPC_CHANNELS } from '../types'
 
 // Use fake suggestions for development (set to false for real LLM pipeline)
-const USE_FAKE_SUGGESTIONS = true
+const USE_FAKE_SUGGESTIONS = false
 
 /**
  * Registers recording-related IPC handlers.
@@ -83,6 +86,12 @@ export function registerRecordingHandlers(): void {
       // Use fake suggestions for development
       fakeSuggestionService.start()
     } else {
+      // Enable LLM mode for ALL pipeline services
+      frameAnalysisService.setUseLLM(true)
+      suggestionGenerationService.setUseLLM(true)
+      scoringFilteringService.setUseLLM(true)
+      deduplicationService.setUseLLM(true)
+
       // Start capture service (screenshots)
       screenCaptureService.start()
 

@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 
 // Import services and IPC handlers
 import { dataStore } from './services/dataStore'
+import { configService } from './services/config'
 import { screenCaptureService } from './services/screenCapture'
 import { mouseTrackerService } from './services/mouseTracker'
 import { pipelineService } from './services/pipelineService'
@@ -394,6 +395,9 @@ function getPopupWindow(): BrowserWindow | null {
 async function initializeServices(): Promise<void> {
   console.log('Initializing backend services...')
 
+  // 0. Initialize config service (load API keys)
+  configService.initialize()
+
   // 1. Initialize data store (load persisted state)
   await dataStore.initialize()
   console.log('Data store initialized')
@@ -416,7 +420,7 @@ async function initializeServices(): Promise<void> {
 
   // 5. Start screen capture if enabled in settings
   const settings = dataStore.getSettings()
-  const USE_FAKE_SUGGESTIONS = true // Use fake suggestions for development
+  const USE_FAKE_SUGGESTIONS = false // Use real LLM pipeline
 
   if (settings.recordingEnabled) {
     if (USE_FAKE_SUGGESTIONS) {

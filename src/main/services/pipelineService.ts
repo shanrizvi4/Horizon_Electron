@@ -85,10 +85,10 @@ import type { Suggestion, Utilities } from '../types'
 // =============================================================================
 
 /** Interval between pipeline runs (milliseconds) */
-const PIPELINE_INTERVAL_MS = 60000 // 60 seconds
+const PIPELINE_INTERVAL_MS = 15000 // 15 seconds
 
 /** Delay before first pipeline run (milliseconds) */
-const INITIAL_RUN_DELAY_MS = 15000 // 15 seconds
+const INITIAL_RUN_DELAY_MS = 5000 // 5 seconds
 
 // =============================================================================
 // PIPELINE SERVICE CLASS
@@ -321,13 +321,13 @@ class PipelineService {
     const now = Date.now()
     const projectId = this.getOrCreateProject()
 
-    // Build utility metrics
+    // Build utility metrics from LLM scores
     const utilities: Utilities = {
       taskNumber: parseInt(scored.id.split('_').pop() || '0'),
       benefit: scored.scores.benefit,
-      falsePositiveCost: 0.1,
-      falseNegativeCost: 0.2,
-      decay: 0.05
+      falsePositiveCost: scored.scores.disruptionCost,
+      falseNegativeCost: scored.scores.missCost,
+      decay: scored.scores.decay
     }
 
     return {

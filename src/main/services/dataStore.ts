@@ -578,6 +578,52 @@ class DataStore {
   updateSettings(updates: Partial<AppSettings>): void {
     this.updateState({ settings: { ...this.state.settings, ...updates } })
   }
+
+  // ---------------------------------------------------------------------------
+  // PIPELINE DATA CLEANUP
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Clears all pipeline data to start fresh.
+   * Removes all files from: screenshots, frame_analysis, concentration_gate,
+   * suggestion_generation, scoring_filtering, deduplication.
+   * Also clears suggestions from state.
+   */
+  async clearPipelineData(): Promise<void> {
+    console.log('Clearing all pipeline data...')
+
+    const folders = [
+      'screenshots',
+      'frame_analysis',
+      'concentration_gate',
+      'suggestion_generation',
+      'scoring_filtering',
+      'deduplication'
+    ]
+
+    for (const folder of folders) {
+      const folderPath = path.join(this.dataDir, folder)
+      try {
+        const files = await fs.promises.readdir(folderPath)
+        for (const file of files) {
+          if (file.startsWith('.')) continue // Skip hidden files like .DS_Store
+          await fs.promises.unlink(path.join(folderPath, file))
+        }
+        console.log(`Cleared ${files.length} files from ${folder}`)
+      } catch (error) {
+        console.log(`Could not clear ${folder}:`, error)
+      }
+    }
+
+    // Clear suggestions from state
+    this.updateState({
+      suggestions: [],
+      chats: [],
+      lastProcessedTimestamp: 0
+    })
+
+    console.log('Pipeline data cleared')
+  }
 }
 
 // =============================================================================

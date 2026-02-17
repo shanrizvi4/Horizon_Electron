@@ -125,8 +125,8 @@ interface EventRecord {
 /** Frame buffer capture rate (10 FPS) */
 const FRAME_BUFFER_INTERVAL_MS = 100
 
-/** Periodic capture interval (30 seconds) */
-const PERIODIC_CAPTURE_INTERVAL_MS = 30000
+/** Periodic capture interval (15 seconds) */
+const PERIODIC_CAPTURE_INTERVAL_MS = 15000
 
 /** Debounce delay after last activity (3 seconds) */
 const DEBOUNCE_DELAY_MS = 3000

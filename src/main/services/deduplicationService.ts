@@ -1,8 +1,13 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { dataStore } from './dataStore'
+import { configService } from './config'
 import { ScoredSuggestion } from './scoringFilteringService'
 import { DEDUPLICATION_PROMPTS, formatSuggestionForPrompt } from './prompts'
+
+/** Gemini API endpoint for text generation */
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
 
 export interface DeduplicationResult {
   batchId: string
@@ -21,12 +26,22 @@ interface SimilarityPair {
   suggestion1Id: string
   suggestion2Id: string
   similarity: number
+  isDuplicate: boolean
+  classification: string
   reason: string
 }
 
 class DeduplicationService {
   private deduplicationDir: string = ''
-  private readonly SIMILARITY_THRESHOLD = 0.7 // Consider duplicates above this
+  private useLLM: boolean = false
+
+  /**
+   * Enables or disables real LLM calls.
+   */
+  setUseLLM(enabled: boolean): void {
+    this.useLLM = enabled
+    console.log(`Deduplication LLM mode: ${enabled ? 'ENABLED' : 'DISABLED'}`)
+  }
 
   async initialize(): Promise<void> {
     this.deduplicationDir = path.join(dataStore.getDataDir(), 'deduplication')
@@ -52,47 +67,54 @@ class DeduplicationService {
     // Also compare against existing suggestions in dataStore
     const existingSuggestions = dataStore.getActiveSuggestions()
 
-    // ============================================================
-    // HARDCODED DEDUPLICATION - SWAP THIS WITH LLM CALL
-    // ============================================================
-    // PROMPTS THAT WOULD BE SENT TO LLM (for each pair):
-    if (suggestions.length > 0 && existingSuggestions.length > 0) {
-      const sug1 = formatSuggestionForPrompt(suggestions[0])
-      const sug2 = formatSuggestionForPrompt({
-        title: existingSuggestions[0].title,
-        description: existingSuggestions[0].description,
-        keywords: existingSuggestions[0].keywords
-      })
-      console.log('\n--- DEDUPLICATION PROMPT (sample) ---')
-      console.log('SYSTEM:', DEDUPLICATION_PROMPTS.system.slice(0, 300) + '...')
-      console.log('USER:', DEDUPLICATION_PROMPTS.user(sug1, sug2))
-      console.log('--- END PROMPT ---\n')
-    } else if (suggestions.length > 1) {
-      const sug1 = formatSuggestionForPrompt(suggestions[0])
-      const sug2 = formatSuggestionForPrompt(suggestions[1])
-      console.log('\n--- DEDUPLICATION PROMPT (sample) ---')
-      console.log('SYSTEM:', DEDUPLICATION_PROMPTS.system.slice(0, 300) + '...')
-      console.log('USER:', DEDUPLICATION_PROMPTS.user(sug1, sug2))
-      console.log('--- END PROMPT ---\n')
+    let unique: ScoredSuggestion[]
+    let duplicates: Array<{ suggestion: ScoredSuggestion; duplicateOf: string; similarityScore: number }>
+    let similarities: SimilarityPair[]
+
+    if (this.useLLM) {
+      console.log('\n--- CALLING GEMINI API (Deduplication) ---')
+      try {
+        const result = await this.deduplicateWithLLM(
+          suggestions,
+          existingSuggestions.map(s => ({
+            id: s.suggestionId,
+            title: s.title,
+            description: s.description,
+            keywords: s.keywords
+          }))
+        )
+        unique = result.unique
+        duplicates = result.duplicates
+        similarities = result.similarities
+        console.log('--- GEMINI RESPONSE RECEIVED ---\n')
+      } catch (error) {
+        console.error('Deduplication LLM failed, falling back to hardcoded:', error)
+        const result = this.deduplicateHardcoded(
+          suggestions,
+          existingSuggestions.map(s => ({
+            id: s.suggestionId,
+            title: s.title,
+            keywords: s.keywords
+          }))
+        )
+        unique = result.unique
+        duplicates = result.duplicates
+        similarities = result.similarities
+      }
+    } else {
+      console.log('\n--- DEDUPLICATION (hardcoded mode) ---')
+      const result = this.deduplicateHardcoded(
+        suggestions,
+        existingSuggestions.map(s => ({
+          id: s.suggestionId,
+          title: s.title,
+          keywords: s.keywords
+        }))
+      )
+      unique = result.unique
+      duplicates = result.duplicates
+      similarities = result.similarities
     }
-    //
-    // To swap with LLM:
-    // For each pair (newSuggestion, existingSuggestion):
-    //   const response = await llm.call({
-    //     system: DEDUPLICATION_PROMPTS.system,
-    //     user: DEDUPLICATION_PROMPTS.user(formatSuggestionForPrompt(s1), formatSuggestionForPrompt(s2))
-    //   })
-    //   const { similarity, isDuplicate, reason } = JSON.parse(response)
-    // ============================================================
-    const { unique, duplicates, similarities } = this.deduplicateHardcoded(
-      suggestions,
-      existingSuggestions.map(s => ({
-        id: s.suggestionId,
-        title: s.title,
-        keywords: s.keywords
-      }))
-    )
-    // ============================================================
 
     // Build clusters
     const clusters = new Map<string, ScoredSuggestion[]>()
@@ -128,6 +150,195 @@ class DeduplicationService {
     return result
   }
 
+  /**
+   * Deduplicates suggestions using the Gemini LLM.
+   */
+  private async deduplicateWithLLM(
+    newSuggestions: ScoredSuggestion[],
+    existingSuggestions: Array<{ id: string; title: string; description: string; keywords: string[] }>
+  ): Promise<{
+    unique: ScoredSuggestion[]
+    duplicates: Array<{ suggestion: ScoredSuggestion; duplicateOf: string; similarityScore: number }>
+    similarities: SimilarityPair[]
+  }> {
+    const apiKey = configService.getGeminiApiKey()
+    if (!apiKey || apiKey === 'your_api_key_here') {
+      throw new Error('GEMINI_API_KEY not configured')
+    }
+
+    const unique: ScoredSuggestion[] = []
+    const duplicates: Array<{ suggestion: ScoredSuggestion; duplicateOf: string; similarityScore: number }> = []
+    const similarities: SimilarityPair[] = []
+
+    for (const suggestion of newSuggestions) {
+      let isDuplicate = false
+      let highestSimilarity = 0
+      let mostSimilarId = ''
+
+      // Check against existing suggestions in dataStore
+      for (const existing of existingSuggestions) {
+        const sug1 = formatSuggestionForPrompt(suggestion)
+        const sug2 = formatSuggestionForPrompt({
+          title: existing.title,
+          description: existing.description,
+          keywords: existing.keywords
+        })
+
+        const systemPrompt = DEDUPLICATION_PROMPTS.system
+        const userPrompt = DEDUPLICATION_PROMPTS.user(sug1, sug2)
+        const fullPrompt = `${systemPrompt}\n\n${userPrompt}`
+
+        const request = {
+          contents: [{ parts: [{ text: fullPrompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 256
+          }
+        }
+
+        console.log(`Comparing: "${suggestion.title.slice(0, 30)}..." vs "${existing.title.slice(0, 30)}..."`)
+        const url = `${GEMINI_API_URL}?key=${apiKey}`
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(request)
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
+        }
+
+        const result = await response.json()
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text
+
+        if (!text) {
+          continue
+        }
+
+        // Parse JSON from response
+        let jsonText = text
+        const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+        if (jsonMatch) {
+          jsonText = jsonMatch[1].trim()
+        }
+
+        try {
+          const parsed = JSON.parse(jsonText)
+          const classification = parsed.classification || 'C'
+          const isThisDuplicate = parsed.isDuplicate || classification === 'A'
+          const similarity = classification === 'A' ? 0.9 : classification === 'B' ? 0.5 : 0.1
+
+          similarities.push({
+            suggestion1Id: suggestion.id,
+            suggestion2Id: existing.id,
+            similarity,
+            isDuplicate: isThisDuplicate,
+            classification,
+            reason: parsed.reason || 'LLM classification'
+          })
+
+          if (similarity > highestSimilarity) {
+            highestSimilarity = similarity
+            mostSimilarId = existing.id
+          }
+
+          if (isThisDuplicate) {
+            isDuplicate = true
+          }
+        } catch {
+          // If parsing fails, skip this comparison
+          console.error('Failed to parse LLM deduplication response')
+        }
+      }
+
+      // Check against already-accepted unique suggestions from this batch
+      for (const uniqueSuggestion of unique) {
+        const sug1 = formatSuggestionForPrompt(suggestion)
+        const sug2 = formatSuggestionForPrompt(uniqueSuggestion)
+
+        const systemPrompt = DEDUPLICATION_PROMPTS.system
+        const userPrompt = DEDUPLICATION_PROMPTS.user(sug1, sug2)
+        const fullPrompt = `${systemPrompt}\n\n${userPrompt}`
+
+        const request = {
+          contents: [{ parts: [{ text: fullPrompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 256
+          }
+        }
+
+        const url = `${GEMINI_API_URL}?key=${apiKey}`
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(request)
+        })
+
+        if (!response.ok) {
+          continue
+        }
+
+        const result = await response.json()
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text
+
+        if (!text) {
+          continue
+        }
+
+        let jsonText = text
+        const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+        if (jsonMatch) {
+          jsonText = jsonMatch[1].trim()
+        }
+
+        try {
+          const parsed = JSON.parse(jsonText)
+          const classification = parsed.classification || 'C'
+          const isThisDuplicate = parsed.isDuplicate || classification === 'A'
+          const similarity = classification === 'A' ? 0.9 : classification === 'B' ? 0.5 : 0.1
+
+          similarities.push({
+            suggestion1Id: suggestion.id,
+            suggestion2Id: uniqueSuggestion.id,
+            similarity,
+            isDuplicate: isThisDuplicate,
+            classification,
+            reason: parsed.reason || 'LLM classification'
+          })
+
+          if (similarity > highestSimilarity) {
+            highestSimilarity = similarity
+            mostSimilarId = uniqueSuggestion.id
+          }
+
+          if (isThisDuplicate) {
+            isDuplicate = true
+          }
+        } catch {
+          // Skip
+        }
+      }
+
+      if (isDuplicate) {
+        duplicates.push({
+          suggestion,
+          duplicateOf: mostSimilarId,
+          similarityScore: highestSimilarity
+        })
+      } else {
+        unique.push(suggestion)
+      }
+    }
+
+    return { unique, duplicates, similarities }
+  }
+
+  private readonly SIMILARITY_THRESHOLD = 0.7 // For hardcoded fallback
+
   private deduplicateHardcoded(
     newSuggestions: ScoredSuggestion[],
     existingSuggestions: Array<{ id: string; title: string; keywords: string[] }>
@@ -156,6 +367,8 @@ class DeduplicationService {
           suggestion1Id: suggestion.id,
           suggestion2Id: existing.id,
           similarity,
+          isDuplicate: similarity >= this.SIMILARITY_THRESHOLD,
+          classification: similarity >= 0.7 ? 'A' : similarity >= 0.4 ? 'B' : 'C',
           reason: `Keyword overlap and title similarity`
         })
 
@@ -180,6 +393,8 @@ class DeduplicationService {
           suggestion1Id: suggestion.id,
           suggestion2Id: uniqueSuggestion.id,
           similarity,
+          isDuplicate: similarity >= this.SIMILARITY_THRESHOLD,
+          classification: similarity >= 0.7 ? 'A' : similarity >= 0.4 ? 'B' : 'C',
           reason: `Keyword overlap and title similarity`
         })
 

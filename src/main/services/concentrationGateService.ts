@@ -39,9 +39,9 @@ const GEMINI_API_URL =
 /**
  * Importance threshold for skipping frames.
  * Frames with importance below this value will be skipped.
- * Set low (0.3) to be conservative and skip only very low-value activity.
+ * Set to 0 to disable filtering (all frames pass through).
  */
-const IMPORTANCE_THRESHOLD = 0.3
+const IMPORTANCE_THRESHOLD = 0
 
 // =============================================================================
 // TYPE DEFINITIONS
@@ -136,6 +136,20 @@ class ConcentrationGateService {
     recentFrames: FrameAnalysis[]
   ): Promise<ConcentrationResult> {
     console.log(`Evaluating concentration gate for frame: ${currentFrame.frameId}`)
+
+    // When threshold is 0, bypass all filtering - all frames pass through
+    if (IMPORTANCE_THRESHOLD === 0) {
+      console.log('\n--- CONCENTRATION GATE DISABLED (threshold=0) ---')
+      const result: ConcentrationResult = {
+        frameId: currentFrame.frameId,
+        decision: 'CONTINUE',
+        importance: 1.0,
+        reason: 'Concentration gate disabled - all frames pass through',
+        processedAt: Date.now()
+      }
+      await this.saveResult(result)
+      return result
+    }
 
     let result: ConcentrationResult
 

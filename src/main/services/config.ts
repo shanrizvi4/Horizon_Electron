@@ -68,12 +68,24 @@ class ConfigService {
     const userDataPath = app.getPath('userData')
     this.configPath = path.join(userDataPath, 'config.json')
 
+    // Also check project root config.json (for development)
+    const projectConfigPath = path.join(process.cwd(), 'config.json')
+
     // Load existing config if available
     try {
       if (fs.existsSync(this.configPath)) {
         const data = fs.readFileSync(this.configPath, 'utf-8')
         this.config = JSON.parse(data)
         console.log('Config loaded from:', this.configPath)
+      } else if (fs.existsSync(projectConfigPath)) {
+        // Fall back to project root config.json
+        const data = fs.readFileSync(projectConfigPath, 'utf-8')
+        const projectConfig = JSON.parse(data)
+        // Map GEMINI_API_KEY to geminiApiKey
+        if (projectConfig.GEMINI_API_KEY) {
+          this.config.geminiApiKey = projectConfig.GEMINI_API_KEY
+        }
+        console.log('Config loaded from project root:', projectConfigPath)
       }
     } catch (error) {
       console.error('Error loading config:', error)

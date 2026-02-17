@@ -30,7 +30,7 @@ import { FRAME_ANALYSIS_PROMPTS } from './prompts'
 
 /** Gemini Vision API endpoint */
 const GEMINI_VISION_API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
 
 /** How often to check for new frames (milliseconds) */
 const PROCESS_INTERVAL_MS = 10000
@@ -105,6 +105,9 @@ class FrameAnalysisService {
 
   /** Whether to use real LLM or hardcoded analysis */
   private useLLM: boolean = false
+
+  /** Lock to prevent concurrent processing */
+  private isProcessing: boolean = false
 
   // ---------------------------------------------------------------------------
   // Configuration
@@ -189,6 +192,13 @@ class FrameAnalysisService {
    * Processes any new frames that haven't been analyzed yet.
    */
   private async processNewFrames(): Promise<void> {
+    // Prevent concurrent processing
+    if (this.isProcessing) {
+      console.log('Frame analysis already in progress, skipping...')
+      return
+    }
+
+    this.isProcessing = true
     try {
       const screenshotsDir = dataStore.getScreenshotsDir()
       const files = await fs.promises.readdir(screenshotsDir)
@@ -199,10 +209,15 @@ class FrameAnalysisService {
         .sort()
 
       for (const frameFile of frameFiles) {
+        // Mark as processed BEFORE analyzing to prevent duplicates
+        const frameId = frameFile.replace('.jpg', '')
+        this.processedFrames.add(frameId)
         await this.analyzeFrame(frameFile)
       }
     } catch (error) {
       console.error('Error processing new frames:', error)
+    } finally {
+      this.isProcessing = false
     }
   }
 
@@ -296,7 +311,7 @@ class FrameAnalysisService {
       ],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 1024
+        maxOutputTokens: 4096
       }
     }
 
@@ -330,16 +345,22 @@ class FrameAnalysisService {
 
     try {
       const parsed = JSON.parse(jsonText)
+      // Handle both "transcription" (new prompt) and "description" (old format)
+      const transcription = parsed.transcription || parsed.description || 'No transcription'
       return {
-        description: parsed.description || 'No description',
+        description: transcription,
         activities: parsed.activities || [],
         applications: parsed.applications || [],
-        keywords: parsed.keywords || []
+        keywords: [
+          ...(parsed.keywords || []),
+          ...(parsed.urls || []),
+          ...(parsed.filePaths || [])
+        ]
       }
     } catch {
       // Extract what we can from text
       return {
-        description: text.slice(0, 200),
+        description: text.slice(0, 500),
         activities: ['unknown'],
         applications: ['unknown'],
         keywords: ['analysis', 'pending']

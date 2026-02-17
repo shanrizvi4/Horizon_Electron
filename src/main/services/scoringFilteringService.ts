@@ -1,21 +1,25 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { dataStore } from './dataStore'
+import { configService } from './config'
 import { GeneratedSuggestion } from './suggestionGenerationService'
 import { SCORING_FILTERING_PROMPTS, formatSuggestionForPrompt } from './prompts'
 
+/** Gemini API endpoint for text generation */
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+
 export interface ScoredSuggestion extends GeneratedSuggestion {
   scores: {
-    benefit: number        // 0-1: How beneficial is this suggestion
-    urgency: number        // 0-1: How urgent is this
-    confidence: number     // 0-1: How confident are we in this suggestion
-    relevance: number      // 0-1: How relevant to user's current work
+    benefit: number        // 1-10: How beneficial is this suggestion
+    disruptionCost: number // 1-10: How disruptive would unsolicited help be
+    missCost: number       // 1-10: How critical if user misses this
+    decay: number          // 1-10: How much benefit diminishes over time
     combined: number       // 0-1: Weighted combination
   }
   filterDecision: {
     passed: boolean
     reason: string
-    threshold: number
   }
   scoredAt: number
 }
@@ -31,7 +35,15 @@ export interface ScoringResult {
 
 class ScoringFilteringService {
   private scoringDir: string = ''
-  private readonly PASS_THRESHOLD = 0.5 // Suggestions below this are filtered out
+  private useLLM: boolean = false
+
+  /**
+   * Enables or disables real LLM calls.
+   */
+  setUseLLM(enabled: boolean): void {
+    this.useLLM = enabled
+    console.log(`Scoring/filtering LLM mode: ${enabled ? 'ENABLED' : 'DISABLED'}`)
+  }
 
   async initialize(): Promise<void> {
     this.scoringDir = path.join(dataStore.getDataDir(), 'scoring_filtering')
@@ -53,32 +65,23 @@ class ScoringFilteringService {
     console.log(`Scoring ${suggestions.length} suggestions`)
 
     const batchId = `score_${Date.now()}`
-
-    // ============================================================
-    // HARDCODED SCORING - SWAP THIS WITH LLM CALL
-    // ============================================================
-    // PROMPTS THAT WOULD BE SENT TO LLM (for each suggestion):
     const userContext = dataStore.getPropositions().map(p => `- ${p.text}`).join('\n')
-    if (suggestions.length > 0) {
-      const sampleSuggestion = formatSuggestionForPrompt(suggestions[0])
-      console.log('\n--- SCORING PROMPT (sample) ---')
-      console.log('SYSTEM:', SCORING_FILTERING_PROMPTS.system.slice(0, 300) + '...')
-      console.log('USER:', SCORING_FILTERING_PROMPTS.user(sampleSuggestion, userContext))
-      console.log('--- END PROMPT ---\n')
+
+    let scoredSuggestions: ScoredSuggestion[]
+
+    if (this.useLLM) {
+      console.log('\n--- CALLING GEMINI API (Scoring & Filtering) ---')
+      try {
+        scoredSuggestions = await this.scoreWithLLM(suggestions, userContext)
+        console.log('--- GEMINI RESPONSE RECEIVED ---\n')
+      } catch (error) {
+        console.error('Scoring LLM failed, falling back to hardcoded:', error)
+        scoredSuggestions = suggestions.map(s => this.scoreHardcoded(s))
+      }
+    } else {
+      console.log('\n--- SCORING (hardcoded mode) ---')
+      scoredSuggestions = suggestions.map(s => this.scoreHardcoded(s))
     }
-    //
-    // To swap with LLM:
-    // const scoredSuggestions = await Promise.all(suggestions.map(async s => {
-    //   const response = await llm.call({
-    //     system: SCORING_FILTERING_PROMPTS.system,
-    //     user: SCORING_FILTERING_PROMPTS.user(formatSuggestionForPrompt(s), userContext)
-    //   })
-    //   const { scores, filterDecision } = JSON.parse(response)
-    //   return { ...s, scores, filterDecision, scoredAt: Date.now() }
-    // }))
-    // ============================================================
-    const scoredSuggestions = suggestions.map(s => this.scoreHardcoded(s))
-    // ============================================================
 
     const passedSuggestions = scoredSuggestions.filter(s => s.filterDecision.passed)
     const filteredOut = scoredSuggestions.filter(s => !s.filterDecision.passed)
@@ -101,29 +104,121 @@ class ScoringFilteringService {
     return result
   }
 
-  private scoreHardcoded(suggestion: GeneratedSuggestion): ScoredSuggestion {
-    // Hardcoded scoring logic - ready to swap with LLM
+  /**
+   * Scores suggestions using the Gemini LLM.
+   */
+  private async scoreWithLLM(
+    suggestions: GeneratedSuggestion[],
+    userContext: string
+  ): Promise<ScoredSuggestion[]> {
+    const apiKey = configService.getGeminiApiKey()
+    if (!apiKey || apiKey === 'your_api_key_here') {
+      throw new Error('GEMINI_API_KEY not configured')
+    }
 
-    // Derive scores from rawSupport and some randomness
+    const scoredSuggestions: ScoredSuggestion[] = []
+
+    for (const suggestion of suggestions) {
+      const suggestionText = formatSuggestionForPrompt(suggestion)
+      const systemPrompt = SCORING_FILTERING_PROMPTS.system
+      const userPrompt = SCORING_FILTERING_PROMPTS.user(suggestionText, userContext)
+      const fullPrompt = `${systemPrompt}\n\n${userPrompt}`
+
+      const request = {
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 512
+        }
+      }
+
+      console.log(`Scoring suggestion: ${suggestion.title.slice(0, 50)}...`)
+      const url = `${GEMINI_API_URL}?key=${apiKey}`
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
+      }
+
+      const result = await response.json()
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text
+
+      if (!text) {
+        throw new Error('No text in Gemini response')
+      }
+
+      // Parse JSON from response
+      let jsonText = text
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (jsonMatch) {
+        jsonText = jsonMatch[1].trim()
+      }
+
+      try {
+        const parsed = JSON.parse(jsonText)
+        const scores = parsed.scores || {}
+
+        // Normalize scores to 0-1 range (they come as 1-10)
+        const benefit = (scores.benefit || 5) / 10
+        const disruptionCost = (scores.disruptionCost || 5) / 10
+        const missCost = (scores.missCost || 5) / 10
+        const decay = (scores.decay || 5) / 10
+
+        // Combined score: high benefit, low disruption
+        const combined = (benefit * 0.5) + ((1 - disruptionCost) * 0.3) + (missCost * 0.2)
+
+        // Pass if benefit >= 5 AND disruptionCost <= 6 (from prompt)
+        const passed = parsed.filterDecision?.passed ?? (scores.benefit >= 5 && scores.disruptionCost <= 6)
+
+        scoredSuggestions.push({
+          ...suggestion,
+          scores: {
+            benefit,
+            disruptionCost,
+            missCost,
+            decay,
+            combined
+          },
+          filterDecision: {
+            passed,
+            reason: parsed.filterDecision?.reason || `Benefit: ${scores.benefit}, Disruption: ${scores.disruptionCost}`
+          },
+          scoredAt: Date.now()
+        })
+      } catch {
+        // If parsing fails, use hardcoded scoring for this suggestion
+        console.error('Failed to parse LLM scoring response, using hardcoded')
+        scoredSuggestions.push(this.scoreHardcoded(suggestion))
+      }
+    }
+
+    return scoredSuggestions
+  }
+
+  private scoreHardcoded(suggestion: GeneratedSuggestion): ScoredSuggestion {
+    // Hardcoded scoring logic - fallback when LLM fails
+
+    // Derive scores from rawSupport
     const baseScore = suggestion.rawSupport / 10 // Normalize to 0-1
 
     const scores = {
       benefit: Math.min(1, baseScore + (Math.random() * 0.2 - 0.1)),
-      urgency: Math.min(1, 0.3 + Math.random() * 0.4),
-      confidence: Math.min(1, baseScore * 0.8 + 0.2),
-      relevance: Math.min(1, baseScore + (Math.random() * 0.3 - 0.15)),
+      disruptionCost: Math.min(1, 0.3 + Math.random() * 0.3),
+      missCost: Math.min(1, baseScore * 0.6 + 0.2),
+      decay: Math.min(1, 0.5 + Math.random() * 0.3),
       combined: 0
     }
 
-    // Calculate combined score (weighted average)
-    scores.combined = (
-      scores.benefit * 0.35 +
-      scores.urgency * 0.2 +
-      scores.confidence * 0.25 +
-      scores.relevance * 0.2
-    )
+    // Calculate combined score
+    scores.combined = (scores.benefit * 0.5) + ((1 - scores.disruptionCost) * 0.3) + (scores.missCost * 0.2)
 
-    const passed = scores.combined >= this.PASS_THRESHOLD
+    const passed = scores.benefit >= 0.5 && scores.disruptionCost <= 0.6
 
     return {
       ...suggestion,
@@ -131,9 +226,8 @@ class ScoringFilteringService {
       filterDecision: {
         passed,
         reason: passed
-          ? `Score ${scores.combined.toFixed(2)} >= threshold ${this.PASS_THRESHOLD}`
-          : `Score ${scores.combined.toFixed(2)} < threshold ${this.PASS_THRESHOLD}`,
-        threshold: this.PASS_THRESHOLD
+          ? `Benefit ${(scores.benefit * 10).toFixed(0)}/10, Disruption ${(scores.disruptionCost * 10).toFixed(0)}/10`
+          : `Low benefit or high disruption cost`
       },
       scoredAt: Date.now()
     }
