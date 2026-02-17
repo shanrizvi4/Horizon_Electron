@@ -95,31 +95,27 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
           {/* Screen Recording - Required */}
           <div className={`permission-card ${permissions.screenRecording ? 'granted' : ''}`}>
             <div className="permission-icon">
-              {permissions.screenRecording ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                  <line x1="8" y1="21" x2="16" y2="21" />
-                  <line x1="12" y1="17" x2="12" y2="21" />
-                </svg>
-              )}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 3H4a1 1 0 0 0-1 1v3" />
+                <path d="M17 3h3a1 1 0 0 1 1 1v3" />
+                <path d="M21 17v3a1 1 0 0 1-1 1h-3" />
+                <path d="M7 21H4a1 1 0 0 1-1-1v-3" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
             </div>
             <div className="permission-info">
-              <div className="permission-header">
-                <h3 className="permission-title">Screen Recording</h3>
-                <span className="permission-badge required">Required</span>
-              </div>
+              <h3 className="permission-title">Screen Recording</h3>
               <p className="permission-description">
                 Allows Horizon to see what you're working on and provide relevant suggestions.
               </p>
             </div>
             <div className="permission-action">
               {permissions.screenRecording ? (
-                <span className="permission-status granted">Granted</span>
+                <span className="permission-status granted">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
               ) : checking ? (
                 <span className="permission-status checking">Checking...</span>
               ) : (
@@ -133,34 +129,28 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
           {/* Accessibility - Optional */}
           <div className={`permission-card ${permissions.accessibility ? 'granted' : ''}`}>
             <div className="permission-icon">
-              {permissions.accessibility ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4l3 3" />
-                </svg>
-              )}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+                <path d="M13 13l6 6" />
+              </svg>
             </div>
             <div className="permission-info">
-              <div className="permission-header">
-                <h3 className="permission-title">Accessibility</h3>
-                <span className="permission-badge optional">Optional</span>
-              </div>
+              <h3 className="permission-title">Accessibility</h3>
               <p className="permission-description">
                 Enables enhanced features like automatic popup positioning.
               </p>
             </div>
             <div className="permission-action">
               {permissions.accessibility ? (
-                <span className="permission-status granted">Granted</span>
+                <span className="permission-status granted">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
               ) : checking ? (
                 <span className="permission-status checking">Checking...</span>
               ) : (
-                <button className="permission-btn secondary" onClick={handleRequestAccessibility}>
+                <button className="permission-btn" onClick={handleRequestAccessibility}>
                   Grant Access
                 </button>
               )}

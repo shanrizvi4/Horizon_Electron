@@ -393,3 +393,53 @@
   background-color: rgba(var(--glass-rgb), 0.1);
   color: var(--text-muted);
 }
+
+/* New suggestion entrance animation */
+@keyframes suggestionEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes borderGlow {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.suggestion-card.entering {
+  animation: suggestionEnter 0.5s ease-out forwards;
+}
+
+/* Subtle glow effect on new cards */
+.suggestion-card.entering::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.3) 0%,
+    rgba(var(--glass-rgb), 0.15) 50%,
+    rgba(var(--glass-rgb), 0.3) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: borderGlow 0.8s ease-out 0.4s forwards;
+}

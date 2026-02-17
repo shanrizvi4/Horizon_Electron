@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import type { Suggestion } from '../../types'
 import { useChat } from '../../hooks/useChat'
 import { useSuggestions } from '../../hooks/useSuggestions'
@@ -14,6 +14,12 @@ interface SuggestionCardProps {
   showProject?: boolean
 }
 
+// Check if suggestion was created within the last 2 seconds
+const isNewSuggestion = (createdAt?: number): boolean => {
+  if (!createdAt) return false
+  return Date.now() - createdAt < 2000
+}
+
 export function SuggestionCard({
   suggestion,
   showProject: _showProject = true
@@ -24,6 +30,17 @@ export function SuggestionCard({
   const { openChatForSuggestion } = useChat()
   const { dismissSuggestion } = useSuggestions()
   const hasExistingChat = suggestion.executionOutput !== ''
+
+  // Track if this card should animate in
+  const [isEntering, setIsEntering] = useState(() => isNewSuggestion(suggestion.createdAt))
+
+  // Remove entering class after animation completes
+  useEffect(() => {
+    if (isEntering) {
+      const timer = setTimeout(() => setIsEntering(false), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [isEntering])
 
   const handleChatClick = (e: React.MouseEvent): void => {
     e.stopPropagation()
@@ -37,7 +54,7 @@ export function SuggestionCard({
 
   return (
     <>
-      <div className="suggestion-card">
+      <div className={`suggestion-card${isEntering ? ' entering' : ''}`}>
         <div className="suggestion-card-content">
           <h3 className="suggestion-card-title">{suggestion.title}</h3>
           <p className="suggestion-card-description">{suggestion.description}</p>
