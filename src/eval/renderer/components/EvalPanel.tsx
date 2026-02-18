@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { FrameList } from './FrameList'
 import { EvalSuggestionList } from './EvalSuggestionList'
-import { EvalSearchInput } from './EvalSearchInput'
+import { SearchBar } from '../../../renderer/src/components/common/SearchBar'
 
 interface FrameSummary {
   frameId: string
@@ -85,23 +85,6 @@ export function EvalPanel({
     )
   }, [suggestions, searchQuery])
 
-  // Handle direct ID search (jump to item)
-  const handleSearchSubmit = (query: string): void => {
-    if (!query.trim()) return
-
-    if (viewMode === 'frames') {
-      const match = frames.find((f) => f.frameId === query)
-      if (match) {
-        onFrameSelect(match.frameId)
-      }
-    } else {
-      const match = suggestions.find((s) => s.suggestionId === query)
-      if (match) {
-        onSuggestionSelect(match.suggestionId)
-      }
-    }
-  }
-
   // Collapsed view - just show expand button
   if (isCollapsed) {
     return (
@@ -130,10 +113,9 @@ export function EvalPanel({
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <EvalSearchInput
+          <SearchBar
             value={searchQuery}
             onChange={onSearch}
-            onSubmit={handleSearchSubmit}
             placeholder={`Search ${viewMode === 'frames' ? 'frames' : 'suggestions'}...`}
           />
         </div>

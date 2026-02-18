@@ -2,34 +2,40 @@
    EVALUATION PAGE STYLES
    ============================================================================= */
 
-/* View Toggle */
+/* View Toggle - matches sort-toggle style */
 .eval-view-toggle {
-  display: flex;
-  background: rgba(var(--glass-rgb), 0.1);
-  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: rgba(var(--glass-rgb), 0.06);
+  border-radius: var(--radius-lg);
   padding: 3px;
+  position: relative;
+  border: 1px solid rgba(var(--glass-rgb), 0.08);
 }
 
 .eval-view-btn {
+  position: relative;
   padding: 6px 16px;
-  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius-lg) - 2px);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  background: transparent;
-  border: none;
+  z-index: 1;
+  text-align: center;
 }
 
-.eval-view-btn:hover {
-  color: var(--text-primary);
+.eval-view-btn:hover:not(.active) {
+  color: var(--text-secondary);
 }
 
 .eval-view-btn.active {
-  background: rgba(var(--glass-rgb), 0.15);
+  background: rgba(var(--glass-rgb), 0.12);
   color: var(--text-heading);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Main Container */
@@ -70,7 +76,7 @@
   gap: var(--spacing-sm);
 }
 
-.eval-panel-header-row .eval-search-input {
+.eval-panel-header-row .search-bar {
   flex: 1;
 }
 
@@ -112,57 +118,6 @@
   width: 36px;
   height: 36px;
   align-self: flex-start;
-}
-
-/* Search Input */
-.eval-search-input {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background: rgba(var(--glass-rgb), 0.08);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  transition: all var(--transition-fast);
-}
-
-.eval-search-input.focused {
-  border-color: var(--accent-primary);
-  background: rgba(var(--glass-rgb), 0.12);
-}
-
-.eval-search-icon {
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.eval-search-field {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-}
-
-.eval-search-field::placeholder {
-  color: var(--text-secondary);
-}
-
-.eval-search-clear {
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 2px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-  background: transparent;
-  border: none;
-  display: flex;
-}
-
-.eval-search-clear:hover {
-  color: var(--text-primary);
-  background: rgba(var(--glass-rgb), 0.1);
 }
 
 /* List Items */

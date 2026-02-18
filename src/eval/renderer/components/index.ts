@@ -1,5 +1,4 @@
 export { EvalPanel } from './EvalPanel'
-export { EvalSearchInput } from './EvalSearchInput'
 export { FrameList } from './FrameList'
 export { EvalSuggestionList } from './EvalSuggestionList'
 export { FrameDetail } from './FrameDetail'
