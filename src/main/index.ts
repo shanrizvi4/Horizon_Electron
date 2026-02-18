@@ -13,6 +13,7 @@ import { frameAnalysisService } from './services/frameAnalysisService'
 import { suggestionGenerationService } from './services/suggestionGenerationService'
 import { scoringFilteringService } from './services/scoringFilteringService'
 import { deduplicationService } from './services/deduplicationService'
+import { evaluationDataService } from '../eval/main'
 // import { testPipeline } from './services/pipelineTest'
 // import { runFullLLMPipeline } from './services/llmPipelineTest'  // For testing
 import { registerAllIpcHandlers } from './ipc'
@@ -405,6 +406,10 @@ async function initializeServices(): Promise<void> {
   // 1. Initialize data store (load persisted state)
   await dataStore.initialize()
   console.log('Data store initialized')
+
+  // 1.5 Initialize evaluation data service
+  await evaluationDataService.initialize()
+  console.log('Evaluation data service initialized')
 
   // 2. Set up popup functions before registering handlers
   setPopupFunctions(

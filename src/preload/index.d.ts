@@ -204,6 +204,180 @@ interface StudyStatus {
   endTime?: number
 }
 
+// =============================================================================
+// EVALUATION TYPES
+// =============================================================================
+
+/**
+ * Frame summary for evaluation list view.
+ */
+interface FrameSummary {
+  /** Unique frame identifier */
+  frameId: string
+  /** Unix timestamp when frame was captured */
+  timestamp: number
+  /** Frame capture type */
+  type: 'periodic' | 'before' | 'after'
+  /** Whether frame has been analyzed */
+  hasAnalysis: boolean
+  /** Concentration gate decision (if processed) */
+  gateDecision?: 'CONTINUE' | 'SKIP'
+  /** Number of suggestions this frame contributed to */
+  contributedToSuggestions: number
+}
+
+/**
+ * Embedded suggestion info for frame trace.
+ */
+interface FrameSuggestionInfo {
+  suggestionId: string
+  title: string
+  description: string
+  approach: string
+  keywords: string[]
+  status: string
+  support: number
+  rawSupport: number
+  scores?: ScoringScores
+  filterDecision?: {
+    passed: boolean
+    reason: string
+  }
+  deduplication?: {
+    isUnique: boolean
+    similarities: SuggestionSimilarity[]
+  }
+}
+
+/**
+ * Full frame trace through the pipeline.
+ */
+interface FrameTrace {
+  /** Unique frame identifier */
+  frameId: string
+  /** Unix timestamp when frame was captured */
+  timestamp: number
+  /** Path to screenshot file */
+  screenshotPath: string
+  /** Frame capture type */
+  type: 'periodic' | 'before' | 'after'
+  /** Frame analysis result (if analyzed) */
+  analysis?: {
+    frameId: string
+    framePath: string
+    timestamp: number
+    analysis: {
+      description: string
+      activities: string[]
+      applications: string[]
+      keywords: string[]
+    }
+    processedAt: number
+    usedLLM: boolean
+  }
+  /** Concentration gate result (if processed) */
+  gateResult?: {
+    frameId: string
+    decision: 'CONTINUE' | 'SKIP'
+    importance: number
+    reason: string
+    processedAt: number
+  }
+  /** IDs of suggestions this frame contributed to */
+  contributedTo: string[]
+  /** Full details of suggestions this frame contributed to */
+  suggestions: FrameSuggestionInfo[]
+}
+
+/**
+ * Suggestion summary for evaluation list view.
+ */
+interface SuggestionSummaryEval {
+  /** Unique suggestion identifier */
+  suggestionId: string
+  /** Suggestion title */
+  title: string
+  /** Current status */
+  status: string
+  /** Combined support score */
+  support: number
+  /** Unix timestamp when created */
+  createdAt: number
+  /** Number of source frames */
+  sourceFrameCount: number
+}
+
+/**
+ * Scoring scores for a suggestion.
+ */
+interface ScoringScores {
+  benefit: number
+  disruptionCost: number
+  missCost: number
+  decay: number
+  combined: number
+}
+
+/**
+ * Similarity comparison between suggestions.
+ */
+interface SuggestionSimilarity {
+  suggestion1Id: string
+  suggestion2Id: string
+  similarity: number
+  isDuplicate: boolean
+  classification: string
+  reason: string
+}
+
+/**
+ * Full suggestion trace through the pipeline.
+ */
+interface SuggestionTrace {
+  /** Unique suggestion identifier */
+  suggestionId: string
+  /** Suggestion title */
+  title: string
+  /** Detailed description */
+  description: string
+  /** Suggested approach */
+  approach: string
+  /** Extracted keywords */
+  keywords: string[]
+  /** Current status */
+  status: string
+  /** Combined support score */
+  support: number
+  /** Unix timestamp when created */
+  createdAt: number
+  /** Source frames that contributed to this suggestion */
+  sourceFrames: FrameSummary[]
+  /** Generation details (if available) */
+  generation?: {
+    batchId: string
+    rawSupport: number
+    supportEvidence: string
+    generatedAt: number
+  }
+  /** Scoring details (if available) */
+  scoring?: {
+    batchId: string
+    scores: ScoringScores
+    filterDecision: {
+      passed: boolean
+      reason: string
+    }
+    scoredAt: number
+  }
+  /** Deduplication details (if available) */
+  deduplication?: {
+    batchId: string
+    isUnique: boolean
+    similarities: SuggestionSimilarity[]
+    processedAt: number
+  }
+}
+
 /**
  * Complete application state.
  *
@@ -446,6 +620,26 @@ interface GumboAPI {
     openPreferences: (pane: 'ScreenCapture' | 'Accessibility') => Promise<{ success: boolean }>
     /** Get all permission statuses */
     getAll: () => Promise<PermissionStatus>
+  }
+
+  // ---------------------------------------------------------------------------
+  // EVALUATION
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Pipeline evaluation data access.
+   */
+  evaluation: {
+    /** List all frames with basic metadata */
+    listFrames: () => Promise<FrameSummary[]>
+    /** List all suggestions with basic metadata */
+    listSuggestions: () => Promise<SuggestionSummaryEval[]>
+    /** Get full pipeline trace for a frame */
+    getFrameTrace: (frameId: string) => Promise<FrameTrace | null>
+    /** Get full pipeline trace for a suggestion */
+    getSuggestionTrace: (suggestionId: string) => Promise<SuggestionTrace | null>
+    /** Get screenshot as base64 data URL */
+    getScreenshot: (frameId: string) => Promise<string | null>
   }
 }
 

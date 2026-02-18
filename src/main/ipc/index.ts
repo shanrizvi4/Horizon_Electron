@@ -70,6 +70,7 @@ import { registerRecordingHandlers } from './recording'
 import { registerStateHandlers } from './state'
 import { registerPopupHandlers } from './popup'
 import { registerPermissionsHandlers } from './permissions'
+import { registerEvaluationHandlers } from '../../eval/main'
 
 /**
  * Registers all IPC handlers for the application.
@@ -102,6 +103,9 @@ export function registerAllIpcHandlers(): void {
   registerStateHandlers() // Multi-window state sync
   registerPopupHandlers() // Popup window management
   registerPermissionsHandlers() // macOS permissions
+
+  // Evaluation handlers
+  registerEvaluationHandlers() // Pipeline evaluation data
 
   console.log('All IPC handlers registered')
 }

@@ -76,7 +76,7 @@ export interface StudyStatus {
   endTime?: number
 }
 
-export type PageType = 'suggestions' | 'projects' | 'userModel' | 'customizeAgent' | 'settings'
+export type PageType = 'suggestions' | 'projects' | 'userModel' | 'customizeAgent' | 'settings' | 'evaluation'
 export type SortMethod = 'recent' | 'importance'
 
 export interface NavigationState {

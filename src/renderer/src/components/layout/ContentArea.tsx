@@ -7,6 +7,7 @@ import { ChatPage } from '../../pages/ChatPage'
 import { UserModelPage } from '../../pages/UserModelPage'
 import { CustomizeAgentPage } from '../../pages/CustomizeAgentPage'
 import { SettingsPage } from '../../pages/SettingsPage'
+import { EvaluationPage } from '../../../../eval/renderer'
 
 export function ContentArea(): React.JSX.Element {
   const { currentPage, selectedChatId, selectedProjectId } = useAppNavigation()
@@ -33,6 +34,8 @@ export function ContentArea(): React.JSX.Element {
       return <CustomizeAgentPage />
     case 'settings':
       return <SettingsPage />
+    case 'evaluation':
+      return <EvaluationPage />
     default:
       return <SuggestionsPage />
   }

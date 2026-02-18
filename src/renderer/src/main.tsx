@@ -8,6 +8,7 @@ import './styles/pages.css'
 import './styles/modals.css'
 import './styles/popup.css'
 import './styles/onboarding.css'
+import '../../eval/renderer/styles/evaluation.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

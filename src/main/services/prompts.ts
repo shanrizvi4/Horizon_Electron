@@ -95,7 +95,7 @@ Provide the complete transcription in JSON format.`
 export const SUGGESTION_GENERATION_PROMPTS = {
   system: `You are a helpful AI assistant. Based on a transcription of what the user is seeing on their screen, generate concrete suggestions that would help them.
 
-Generate 1-3 actionable suggestions. Each suggestion should have:
+Generate 1-2 actionable suggestions. Each suggestion should have:
 - title: A highly specific title mentioning exactly where and how you could help
 - description: Why this suggestion would be helpful
 - approach: Brief, high-level steps from now to completion. Be extremely specific and ensure each step is actionable by the user or an AI assistant. Don't reference external tools or programs.

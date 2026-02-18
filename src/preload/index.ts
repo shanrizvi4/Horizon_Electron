@@ -196,7 +196,21 @@ const IPC_CHANNELS = {
   /** Open System Preferences to specific pane */
   PERMISSIONS_OPEN_PREFERENCES: 'permissions:openPreferences',
   /** Get all permission statuses */
-  PERMISSIONS_GET_ALL: 'permissions:getAll'
+  PERMISSIONS_GET_ALL: 'permissions:getAll',
+
+  // ---------------------------------------------------------------------------
+  // EVALUATION - Pipeline evaluation data
+  // ---------------------------------------------------------------------------
+  /** List all frames with basic metadata */
+  EVALUATION_LIST_FRAMES: 'evaluation:listFrames',
+  /** List all suggestions with basic metadata */
+  EVALUATION_LIST_SUGGESTIONS: 'evaluation:listSuggestions',
+  /** Get full pipeline trace for a frame */
+  EVALUATION_GET_FRAME_TRACE: 'evaluation:getFrameTrace',
+  /** Get full pipeline trace for a suggestion */
+  EVALUATION_GET_SUGGESTION_TRACE: 'evaluation:getSuggestionTrace',
+  /** Get screenshot as base64 data URL */
+  EVALUATION_GET_SCREENSHOT: 'evaluation:getScreenshot'
 } as const
 
 // =============================================================================
@@ -560,6 +574,36 @@ const api = {
 
     /** Get all permission statuses at once */
     getAll: () => ipcRenderer.invoke(IPC_CHANNELS.PERMISSIONS_GET_ALL)
+  },
+
+  // ---------------------------------------------------------------------------
+  // EVALUATION API
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Pipeline evaluation data access.
+   *
+   * Provides methods to access frame analyses, suggestion traces, and
+   * other pipeline data for evaluation and debugging purposes.
+   */
+  evaluation: {
+    /** List all frames with basic metadata (sorted by timestamp, newest first) */
+    listFrames: () => ipcRenderer.invoke(IPC_CHANNELS.EVALUATION_LIST_FRAMES),
+
+    /** List all suggestions with basic metadata (sorted by timestamp, newest first) */
+    listSuggestions: () => ipcRenderer.invoke(IPC_CHANNELS.EVALUATION_LIST_SUGGESTIONS),
+
+    /** Get full pipeline trace for a specific frame */
+    getFrameTrace: (frameId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.EVALUATION_GET_FRAME_TRACE, frameId),
+
+    /** Get full pipeline trace for a specific suggestion */
+    getSuggestionTrace: (suggestionId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.EVALUATION_GET_SUGGESTION_TRACE, suggestionId),
+
+    /** Get screenshot as base64 data URL */
+    getScreenshot: (frameId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.EVALUATION_GET_SCREENSHOT, frameId)
   }
 }
 
