@@ -9,6 +9,10 @@ import { configService } from './services/config'
 import { screenCaptureService } from './services/screenCapture'
 import { mouseTrackerService } from './services/mouseTracker'
 import { pipelineService } from './services/pipelineService'
+import { frameAnalysisService } from './services/frameAnalysisService'
+import { suggestionGenerationService } from './services/suggestionGenerationService'
+import { scoringFilteringService } from './services/scoringFilteringService'
+import { deduplicationService } from './services/deduplicationService'
 // import { testPipeline } from './services/pipelineTest'
 // import { runFullLLMPipeline } from './services/llmPipelineTest'  // For testing
 import { registerAllIpcHandlers } from './ipc'
@@ -429,6 +433,12 @@ async function initializeServices(): Promise<void> {
       fakeSuggestionService.start()
       console.log('Fake suggestion service started')
     } else {
+      // Enable LLM mode for ALL pipeline services
+      frameAnalysisService.setUseLLM(true)
+      suggestionGenerationService.setUseLLM(true)
+      scoringFilteringService.setUseLLM(true)
+      deduplicationService.setUseLLM(true)
+
       screenCaptureService.start()
       console.log('Screen capture service started')
 
