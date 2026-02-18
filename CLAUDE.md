@@ -11,8 +11,9 @@ Use descriptive commit messages that summarize what was done.
 Use this single bash command to clear everything and restart:
 
 ```bash
+PROJECT_ROOT="$(git rev-parse --show-toplevel)" && \
 pkill -f "electron-vite" 2>/dev/null; pkill -f "Electron" 2>/dev/null; sleep 2 && \
-cd /Users/shanrizvi/Desktop/HorizonDemo/horizon-demo/GUMBO2/GUMBO_Electron/data && \
+cd "$PROJECT_ROOT/data" && \
 rm -f screenshots/*.jpg screenshots/*.jpeg screenshots/*.png 2>/dev/null; \
 rm -f frame_analysis/*.json 2>/dev/null; \
 rm -f concentration_gate/*.json 2>/dev/null; \
@@ -32,7 +33,7 @@ cat > state.json << 'EOF'
   "lastProcessedTimestamp": 0
 }
 EOF
-cd /Users/shanrizvi/Desktop/HorizonDemo/horizon-demo/GUMBO2/GUMBO_Electron && npm run dev
+cd "$PROJECT_ROOT" && npm run dev
 ```
 
 Run this in background mode. It kills the server, waits, clears all pipeline data, resets state.json, and restarts.

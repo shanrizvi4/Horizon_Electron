@@ -17,6 +17,11 @@ interface PermissionStatus {
   accessibility: boolean
 }
 
+interface AnimatingStatus {
+  screenRecording: boolean
+  accessibility: boolean
+}
+
 const hasElectronAPI = (): boolean => {
   return typeof window !== 'undefined' && window.api?.permissions !== undefined
 }
@@ -27,6 +32,10 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
     accessibility: false
   })
   const [checking, setChecking] = useState(true)
+  const [animating, setAnimating] = useState<AnimatingStatus>({
+    screenRecording: false,
+    accessibility: false
+  })
 
   const checkPermissions = useCallback(async () => {
     if (!hasElectronAPI()) {
@@ -110,19 +119,21 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
               </p>
             </div>
             <div className="permission-action">
-              {permissions.screenRecording ? (
-                <span className="permission-status granted">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-              ) : checking ? (
-                <span className="permission-status checking">Checking...</span>
-              ) : (
-                <button className="permission-btn" onClick={handleRequestScreenRecording}>
-                  Grant Access
-                </button>
-              )}
+              <div className={`permission-btn-wrapper ${permissions.screenRecording || animating.screenRecording ? 'granted' : ''}`}>
+                {permissions.screenRecording ? (
+                  <span className="permission-status granted">
+                    <svg className="checkmark-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
+                ) : checking ? (
+                  <span className="permission-status checking">Checking...</span>
+                ) : (
+                  <button className="permission-btn" onClick={handleRequestScreenRecording}>
+                    Grant Access
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -141,21 +152,24 @@ export const PermissionsStep: React.FC<PermissionsStepProps> = ({ onNext, onBack
               </p>
             </div>
             <div className="permission-action">
-              {permissions.accessibility ? (
-                <span className="permission-status granted">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-              ) : checking ? (
-                <span className="permission-status checking">Checking...</span>
-              ) : (
-                <button className="permission-btn" onClick={handleRequestAccessibility}>
-                  Grant Access
-                </button>
-              )}
+              <div className={`permission-btn-wrapper ${permissions.accessibility || animating.accessibility ? 'granted' : ''}`}>
+                {permissions.accessibility ? (
+                  <span className="permission-status granted">
+                    <svg className="checkmark-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
+                ) : checking ? (
+                  <span className="permission-status checking">Checking...</span>
+                ) : (
+                  <button className="permission-btn" onClick={handleRequestAccessibility}>
+                    Grant Access
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+
         </div>
 
         {!permissions.screenRecording && !checking && (

@@ -23,8 +23,8 @@ export function SuggestionList({
     return (
       <div className="empty-state">
         <div className="empty-state-icon">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="currentColor">
-            <path d="M24 4a1 1 0 011 1v1.323l7.908 3.164 3.198-1.6a1 1 0 01.894 1.79l-2.466 1.234 3.476 10.84a1 1 0 01-.57 1.21A7.979 7.979 0 0134 24a7.979 7.979 0 01-5.334-2.036 1 1 0 01-.57-1.21l3.43-10.697L26 7.954V40h4a1 1 0 110 2h-12a1 1 0 110-2h4V7.954l-5.526 2.103 3.43 10.697a1 1 0 01-.57 1.21A7.979 7.979 0 0114 24a7.979 7.979 0 01-5.334-2.036 1 1 0 01-.57-1.21l3.476-10.84-2.466-1.234a1 1 0 01.894-1.79l3.198 1.6L21 6.323V5a1 1 0 011-1z" />
+          <svg width="48" height="48" viewBox="0 0 40 40" fill="currentColor" opacity="0.5">
+            <path d="M20 4a16 16 0 100 32 16 16 0 000-32zm0 28a12 12 0 110-24 12 12 0 010 24zm-1-19v8h2v-8h-2zm0 10v2h2v-2h-2z" />
           </svg>
         </div>
         <p className="empty-state-title">{emptyMessage}</p>
