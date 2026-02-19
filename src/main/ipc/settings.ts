@@ -55,7 +55,7 @@
  */
 
 import { ipcMain } from 'electron'
-import { dataStore } from '../services/dataStore'
+import { dataStore } from '../services/core/dataStore'
 import { IPC_CHANNELS, AppSettings, CustomizeAgentData } from '../types'
 
 /**

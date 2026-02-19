@@ -1,5 +1,5 @@
-import { dataStore } from './dataStore'
-import type { UserProposition } from '../types'
+import { dataStore } from '../core/dataStore'
+import type { UserProposition } from '../../types'
 
 function generateId(): string {
   return `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`

@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { dataStore } from './dataStore'
-import { configService } from './config'
+import { dataStore } from '../core/dataStore'
+import { configService } from '../core/config'
 import { frameAnalysisService, FrameAnalysis } from './frameAnalysisService'
 import { SUGGESTION_GENERATION_PROMPTS, formatFrameAnalysesForPrompt } from './prompts'
 

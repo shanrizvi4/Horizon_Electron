@@ -12,7 +12,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { dataStore } from '../../main/services/dataStore'
+import { dataStore } from '../../main/services/core/dataStore'
 
 // =============================================================================
 // TYPE DEFINITIONS

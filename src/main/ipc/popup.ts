@@ -44,7 +44,7 @@
 
 import { ipcMain, BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '../types'
-import { mouseTrackerService } from '../services/mouseTracker'
+import { mouseTrackerService } from '../services/capture/mouseTracker'
 
 // =============================================================================
 // FUNCTION REFERENCES

@@ -51,10 +51,10 @@
  */
 
 import { ipcMain, BrowserWindow } from 'electron'
-import { screenCaptureService } from '../services/screenCapture'
-import { pipelineService } from '../services/pipelineService'
-import { frameAnalysisService } from '../services/frameAnalysisService'
-import { dataStore } from '../services/dataStore'
+import { screenCaptureService } from '../services/capture/screenCapture'
+import { pipelineService } from '../services/pipeline/pipelineService'
+import { frameAnalysisService } from '../services/pipeline/frameAnalysisService'
+import { dataStore } from '../services/core/dataStore'
 import { IPC_CHANNELS } from '../types'
 
 /**

@@ -38,8 +38,8 @@
  */
 
 import { ipcMain, BrowserWindow } from 'electron'
-import { dataStore } from '../services/dataStore'
-import { chatService } from '../services/chatService'
+import { dataStore } from '../services/core/dataStore'
+import { chatService } from '../services/llm/chatService'
 import { IPC_CHANNELS, Chat, Message } from '../types'
 
 /**

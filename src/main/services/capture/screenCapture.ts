@@ -71,7 +71,7 @@
 import { desktopCapturer, BrowserWindow, screen } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
-import { dataStore } from './dataStore'
+import { dataStore } from '../core/dataStore'
 import { uIOhook, UiohookMouseEvent, UiohookWheelEvent } from 'uiohook-napi'
 
 // =============================================================================

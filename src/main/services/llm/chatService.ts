@@ -41,9 +41,9 @@
  * @module services/chatService
  */
 
-import type { Chat } from '../types'
-import { dataStore } from './dataStore'
-import { configService } from './config'
+import type { Chat } from '../../types'
+import { dataStore } from '../core/dataStore'
+import { configService } from '../core/config'
 
 // =============================================================================
 // CONFIGURATION

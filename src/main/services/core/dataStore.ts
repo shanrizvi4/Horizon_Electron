@@ -47,7 +47,7 @@ import type {
   CustomizeAgentData,
   AppSettings,
   Message
-} from '../types'
+} from '../../types'
 
 // =============================================================================
 // DEFAULT STATE

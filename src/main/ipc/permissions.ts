@@ -18,7 +18,7 @@
 
 import { ipcMain } from 'electron'
 import { IPC_CHANNELS } from '../types'
-import { permissionsService, PermissionType } from '../services/permissionsService'
+import { permissionsService, PermissionType } from '../services/capture/permissionsService'
 
 /**
  * Registers all permission-related IPC handlers.

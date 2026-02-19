@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { dataStore } from './dataStore'
-import { configService } from './config'
+import { dataStore } from '../core/dataStore'
+import { configService } from '../core/config'
 import { GeneratedSuggestion } from './suggestionGenerationService'
 import { SCORING_FILTERING_PROMPTS, formatSuggestionForPrompt } from './prompts'
 

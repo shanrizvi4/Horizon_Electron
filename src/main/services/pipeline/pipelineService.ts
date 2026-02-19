@@ -72,13 +72,13 @@
  * @module services/pipelineService
  */
 
-import { dataStore } from './dataStore'
+import { dataStore } from '../core/dataStore'
 import { frameAnalysisService } from './frameAnalysisService'
 import { concentrationGateService } from './concentrationGateService'
 import { suggestionGenerationService } from './suggestionGenerationService'
 import { scoringFilteringService } from './scoringFilteringService'
 import { deduplicationService } from './deduplicationService'
-import type { Suggestion, Utilities } from '../types'
+import type { Suggestion, Utilities } from '../../types'
 
 // =============================================================================
 // CONFIGURATION
