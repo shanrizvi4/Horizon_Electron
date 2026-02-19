@@ -321,13 +321,14 @@ class PipelineService {
     const now = Date.now()
     const projectId = this.getOrCreateProject()
 
-    // Build utility metrics from LLM scores
+    // Build utility metrics from new scoring dimensions
     const utilities: Utilities = {
       taskNumber: parseInt(scored.id.split('_').pop() || '0'),
-      benefit: scored.scores.benefit,
-      falsePositiveCost: scored.scores.disruptionCost,
-      falseNegativeCost: scored.scores.missCost,
-      decay: scored.scores.decay
+      importance: scored.scores.importance,
+      confidence: scored.scores.confidence,
+      timeliness: scored.scores.timeliness,
+      actionability: scored.scores.actionability,
+      compositeScore: scored.scores.compositeScore
     }
 
     return {
@@ -335,15 +336,18 @@ class PipelineService {
       projectId,
       title: scored.title,
       description: scored.description,
+      category: scored.category || 'efficiency',
       initialPrompt: `Help me with: ${scored.title}`,
       status: 'active',
       keywords: scored.keywords,
       approach: scored.approach,
       executionOutput: '',
       executionSummary: { title: scored.title.slice(0, 30), description: 'Pending' },
-      support: scored.scores.combined,
+      confidence: scored.confidence ?? 0.7,
+      decayProfile: scored.decayProfile || 'session',
+      support: scored.scores.compositeScore / 10, // Normalize to 0-1
       utilities,
-      grounding: scored.supportEvidence,
+      grounding: scored.supportEvidence || [],
       initialChatMessage: scored.initialChatMessage,
       createdAt: now,
       updatedAt: now

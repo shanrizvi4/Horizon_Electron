@@ -6,22 +6,22 @@ const hasElectronAPI = (): boolean => {
   return typeof window !== 'undefined' && window.api && typeof window.api.recording?.getStatus === 'function'
 }
 
-type ThemeType = 'dusk' | 'light' | 'dark'
+type ThemeType = 'slate' | 'light' | 'dark'
 
-const THEMES: { value: ThemeType; label: string; description: string }[] = [
-  { value: 'dusk', label: 'Dusk', description: 'Blue/slate theme (default)' },
-  { value: 'light', label: 'Light', description: 'Clean and bright' },
-  { value: 'dark', label: 'Dark', description: 'Deep and rich' }
+const THEMES: { value: ThemeType; label: string }[] = [
+  { value: 'slate', label: 'Slate' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' }
 ]
 
 function getInitialTheme(): ThemeType {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('gumbo-theme')
-    if (saved === 'dusk' || saved === 'light' || saved === 'dark') {
+    if (saved === 'slate' || saved === 'light' || saved === 'dark') {
       return saved
     }
   }
-  return 'dusk'
+  return 'slate'
 }
 
 function applyTheme(theme: ThemeType): void {
@@ -125,7 +125,7 @@ export function SettingsPage(): React.JSX.Element {
                       key={theme.value}
                       className={`theme-option ${currentTheme === theme.value ? 'active' : ''}`}
                       onClick={() => handleThemeChange(theme.value)}
-                      title={theme.description}
+
                     >
                       <span
                         className="theme-option-preview"

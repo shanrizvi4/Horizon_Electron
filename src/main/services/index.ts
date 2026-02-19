@@ -1,6 +1,5 @@
 export { dataStore } from './dataStore'
 export { chatService } from './chatService'
-export { suggestionService } from './suggestionService'
 export { screenCaptureService } from './screenCapture'
 export { userModelService } from './userModelService'
 export * from './retrieval'

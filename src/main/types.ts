@@ -67,6 +67,9 @@ export interface Suggestion {
   /** Detailed description of the suggested task */
   description: string
 
+  /** Category of suggestion */
+  category: 'problem' | 'efficiency' | 'learning'
+
   /** System prompt used when opening a chat for this suggestion */
   initialPrompt: string
 
@@ -85,7 +88,13 @@ export interface Suggestion {
   /** Summarized execution result for display */
   executionSummary: { title: string; description: string }
 
-  /** Support/confidence score from the pipeline (0-1) */
+  /** Confidence score from generation (0-1) - how likely suggestion is correct */
+  confidence: number
+
+  /** Decay profile determining how quickly value diminishes */
+  decayProfile: 'ephemeral' | 'session' | 'durable' | 'evergreen'
+
+  /** Support/confidence score from the pipeline (0-1) - composite score */
   support: number
 
   /** Utility metrics used for prioritization */
@@ -110,23 +119,27 @@ export interface Suggestion {
 /**
  * Utility metrics for suggestion prioritization.
  *
- * These values are used to rank suggestions by relevance and urgency.
+ * Scoring dimensions (0-10 each). If ANY falls below 5, suggestion is killed.
+ * Composite = 0.3*importance + 0.4*confidence + 0.2*timeliness + 0.1*actionability
  */
 export interface Utilities {
   /** Sequential task number for ordering */
   taskNumber: number
 
-  /** Expected benefit if user acts on this (0-1) */
-  benefit: number
+  /** How much value if valid? (0-10) */
+  importance: number
 
-  /** Cost of false positive - suggesting irrelevant task (0-1) */
-  falsePositiveCost: number
+  /** How likely is it correct? (0-10) - highest weight in composite */
+  confidence: number
 
-  /** Cost of false negative - missing relevant task (0-1) */
-  falseNegativeCost: number
+  /** Is now the right moment? Incorporates stuck vs flow state (0-10) */
+  timeliness: number
 
-  /** Time decay factor - how quickly relevance decreases (0-1) */
-  decay: number
+  /** Can user act immediately? (0-10) */
+  actionability: number
+
+  /** Composite score: 0.3*importance + 0.4*confidence + 0.2*timeliness + 0.1*actionability */
+  compositeScore: number
 }
 
 /**

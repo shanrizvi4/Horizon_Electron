@@ -5,7 +5,7 @@ import { ContentArea } from './components/layout/ContentArea'
 // Apply saved theme on app start
 function applyInitialTheme(): void {
   const saved = localStorage.getItem('gumbo-theme')
-  if (saved === 'dusk' || saved === 'light' || saved === 'dark') {
+  if (saved === 'slate' || saved === 'light' || saved === 'dark') {
     document.documentElement.setAttribute('data-theme', saved)
   }
 }

@@ -95,48 +95,82 @@ Provide the complete transcription in JSON format.`
 export const SUGGESTION_GENERATION_PROMPTS = {
   system: `You are a helpful AI assistant. Based on a transcription of what the user is seeing on their screen, generate concrete suggestions that would help them.
 
-Generate 1-2 actionable suggestions. Each suggestion should have:
-- title: A highly specific title mentioning exactly where and how you could help
-- description: Why this suggestion would be helpful
-- approach: Brief, high-level steps from now to completion. Be extremely specific and ensure each step is actionable by the user or an AI assistant. Don't reference external tools or programs.
-- keywords: Keywords helpful for retrieval (include project names when possible)
-- supportEvidence: What from the transcription supports this suggestion? Note anything missing.
-- rawSupport: 1-10 score for how much information you have to actually complete this task
-  - 1 = You don't have the information needed
-  - 10 = You have everything needed to comprehensively complete it
-- initialChatMessage: A detailed, helpful opening message (3-6 paragraphs) shown when the user starts a chat about this suggestion. This should:
-  1. Explain specifically what you observed on their screen that led to this suggestion
-  2. Describe the suggestion in detail - what it involves and why it would help
-  3. Outline the concrete steps or approach you'd recommend
-  4. Mention any relevant context, best practices, or considerations
-  5. End by asking what aspect they'd like to start with or if they have questions
-  Be conversational, specific, and thorough. Use markdown formatting (headers, bullet points, code blocks if relevant).
+## QUALITY REQUIREMENTS
+A suggestion MUST be:
+- **Accurate**: The problem/opportunity actually exists
+- **Relevant**: It matters to the user's current context
+- **Timely**: This is the appropriate moment to suggest it
+- **Actionable**: The user knows exactly what to do
+- **Clear**: No ambiguity in what's being suggested
 
-PRINCIPLES - You must follow these:
+**CRITICAL: Generate NOTHING rather than bad suggestions. If you cannot meet ALL quality requirements, return an empty suggestions array.**
+
+## CATEGORIES
+Each suggestion must belong to exactly one category:
+
+1. **problem**: Something is wrong or might go wrong
+   - Visible errors, failures, potential issues, risky patterns
+   - Higher urgency - user should address soon
+
+2. **efficiency**: There's a better or faster way
+   - Suboptimal workflows, automatable work, shortcuts available
+   - Medium urgency - would improve productivity
+
+3. **learning**: User might not know about this
+   - Unknown features, helpful concepts, better tools for the task
+   - Lower urgency - educational value
+
+## OUTPUT STRUCTURE
+Each suggestion must include:
+- **title**: Highly specific title mentioning exactly where and how you could help
+- **category**: One of "problem", "efficiency", or "learning"
+- **description**: Why this suggestion would be helpful
+- **approach**: Brief, high-level steps from now to completion
+- **keywords**: Keywords helpful for retrieval (include project names)
+- **confidence**: 0-1 score for how confident you are this suggestion is correct and valuable
+  - 0.9-1.0 = Certain this is accurate and helpful
+  - 0.7-0.9 = Highly confident
+  - 0.5-0.7 = Moderately confident
+  - Below 0.5 = Do not generate this suggestion
+- **decayProfile**: How quickly the suggestion's value diminishes
+  - "ephemeral": 2-minute half-life - only valuable right now
+  - "session": 2-hour half-life - valuable during this work session
+  - "durable": 1-week half-life - valuable for extended periods
+  - "evergreen": No decay - valuable until explicitly addressed
+- **supportEvidence**: What from the transcription supports this suggestion
+- **initialChatMessage**: A detailed opening message (3-6 paragraphs) for when user starts a chat. Include:
+  1. What you observed that led to this suggestion
+  2. Detailed description and why it would help
+  3. Concrete steps you'd recommend
+  4. Relevant context, best practices, considerations
+  5. Ask what aspect they'd like to start with
+
+## PRINCIPLES
 - Provide actionable and SPECIFIC recommendations
-- Assign high support scores (8-10) only when fully justified by the transcription
-- Ensure suggestions are distinct and not similar to each other
-- Think beyond what is on screen - explore additional possibilities and approaches
-- Incorporate external ideas, best practices, or creative solutions when reasonable
+- Be CONSERVATIVE with confidence scores
+- Ensure suggestions are distinct from each other
+- Think beyond what's on screen when reasonable
 
-AVOID - Do not generate suggestions that:
-- Are menial or purely organizational
-- Are trivial or self-evident (e.g., clicking a clearly labeled button)
-- Tell the user to do something they are ALREADY doing or in the process of doing
-- The user or an AI assistant could not reasonably complete
+## AVOID
+Do not generate suggestions that:
+- Are trivial or self-evident
+- Tell the user to do something they're ALREADY doing
+- Cannot be reasonably completed by user or AI assistant
 - Are too high-level or generic
-- You yourself don't have a clear idea of what the path to success looks like
+- You yourself don't have a clear path to success for
 
 Respond in JSON format:
 {
   "suggestions": [
     {
       "title": "...",
+      "category": "problem" | "efficiency" | "learning",
       "description": "...",
       "approach": "...",
       "keywords": ["..."],
+      "confidence": 0.85,
+      "decayProfile": "session",
       "supportEvidence": "...",
-      "rawSupport": 7,
       "initialChatMessage": "..."
     }
   ]
@@ -150,7 +184,7 @@ ${frameAnalyses}
 User Context/Preferences:
 ${userPropositions || "No user preferences available."}
 
-Generate specific, actionable suggestions in JSON format.`
+Generate specific, actionable suggestions in JSON format. Remember: generate NOTHING rather than low-quality suggestions.`
 }
 
 // ============================================================
@@ -159,49 +193,64 @@ Generate specific, actionable suggestions in JSON format.`
 export const SCORING_FILTERING_PROMPTS = {
   system: `You evaluate suggestions for a user based on their current screen activity.
 
-For each suggestion, provide scores from 1-10:
+For each suggestion, provide scores from 0-10 on these dimensions:
 
-1. **benefit**: "How beneficial will assistance on this suggestion be?"
+1. **importance**: "How much value would this provide if valid?"
    Consider:
-   - How inherently simple or trivial is this? Self-evident actions score lower.
-   - How generic is the suggestion? Generic suggestions score lower.
-   - Is the user already doing this? If so, additional value may be low.
-   - The scale of improvement the assistance can provide.
-   Take a CONSERVATIVE approach - don't over-score benefit.
+   - Impact on user's work quality or productivity
+   - Severity of the problem being addressed (for problem category)
+   - Magnitude of efficiency gain (for efficiency category)
+   - Learning value and applicability (for learning category)
+   0-3 = Low value, 4-6 = Medium value, 7-10 = High value
 
-2. **disruptionCost**: "How disruptive would unsolicited assistance be?" (false positive cost)
+2. **confidence**: "How likely is this suggestion correct and applicable?"
    Consider:
-   - How might this interfere with the user's current workflow or focus?
-   - Is this suggestion useful for what the user is actively focused on?
-   1 = not disruptive, 10 = highly disruptive
+   - Is there clear evidence from the screen supporting this?
+   - Could this be a misinterpretation of the user's intent?
+   - How specific vs generic is the suggestion?
+   - Does the approach actually solve the identified issue?
+   0-3 = Uncertain/speculative, 4-6 = Moderately confident, 7-10 = Highly confident
+   **This dimension has the HIGHEST WEIGHT - be conservative.**
 
-3. **missCost**: "How critical is it for the user to receive this if they need it?" (false negative cost)
+3. **timeliness**: "Is now the right moment for this suggestion?"
    Consider:
-   - Severity of potential challenges without this suggestion
-   - How likely the task is to fail without intervention
-   1 = no impact, 10 = significant negative impact
+   - Is the user in a stuck state (struggling, errors, repeated attempts)?
+   - Is the user in flow state (making steady progress, focused)?
+   - Would interruption now be helpful or disruptive?
+   - Is this time-sensitive (will become irrelevant soon)?
+   0-3 = Bad timing (user in flow, would disrupt), 4-6 = Neutral timing, 7-10 = Perfect timing (user stuck, needs help)
 
-4. **decay**: "How much does the benefit diminish over time?"
+4. **actionability**: "Can the user act on this immediately?"
    Consider:
-   - Immediacy of the task's needs or deadlines
-   - Whether the task becomes irrelevant if not addressed promptly
-   1 = obsolete unless acted on immediately, 10 = still useful hours later
+   - Are all prerequisites met?
+   - Is the suggested action clear and specific?
+   - Does the user have the tools/access needed?
+   - Is this something that can be done now vs later?
+   0-3 = Cannot act now, 4-6 = Some preparation needed, 7-10 = Can act immediately
+
+## FILTERING RULES
+**ALL dimensions must score >= 5 to pass.** If ANY dimension is below 5, the suggestion is KILLED.
+
+Composite score = 0.3*importance + 0.4*confidence + 0.2*timeliness + 0.1*actionability
+
+A suggestion enters the candidate pool if:
+- All dimensions >= 5 AND
+- Composite score >= 6.0
 
 Respond in JSON format:
 {
   "scores": {
-    "benefit": 7,
-    "disruptionCost": 3,
-    "missCost": 6,
-    "decay": 8
+    "importance": 7,
+    "confidence": 8,
+    "timeliness": 6,
+    "actionability": 9
   },
+  "compositeScore": 7.3,
   "filterDecision": {
     "passed": true,
-    "reason": "High benefit with low disruption cost"
+    "reason": "All dimensions above threshold, high confidence and actionability"
   }
-}
-
-A suggestion passes if: benefit >= 5 AND disruptionCost <= 6`,
+}`,
 
   user: (suggestion: string, userContext: string) => `Evaluate this suggestion based on the user's current activity.
 
@@ -211,31 +260,58 @@ ${suggestion}
 Current Screen Activity:
 ${userContext || "No additional context available."}
 
-Provide your evaluation in JSON format.`
+Score each dimension (0-10), calculate the composite score, and determine if it passes the filter.
+Remember: ALL dimensions must be >= 5, and composite must be >= 6.0 to pass.`
 }
 
 // ============================================================
 // STEP 5: DEDUPLICATION PROMPTS
 // ============================================================
 export const DEDUPLICATION_PROMPTS = {
-  system: `Determine the relationship between two suggestions.
+  system: `Determine the relationship between two suggestions by analyzing their category, keywords, and semantic meaning.
 
-Classify their relationship into one of these categories:
+## Analysis Steps
 
-(A) COMBINE - The suggestions are similar and could be combined into one.
-(B) RELATED - The suggestions are different but might be related through a broad goal.
-(C) DIFFERENT - The suggestions are fundamentally different, addressing separate objectives.
+1. **Category Comparison**: Are they the same category (problem/efficiency/learning)?
+   - Same category suggestions are MORE likely to be duplicates
+   - Different category suggestions addressing the same issue should be kept separate
 
-Ignore irrelevant context when making a final classification.
+2. **Keyword Overlap**: Extract and compare key terms from both suggestions
+   - High overlap (>50% shared keywords) suggests potential duplicate
+   - Low overlap suggests distinct suggestions
+
+3. **Semantic Similarity**: Do they address the same underlying issue/opportunity?
+   - Same root problem/opportunity = likely duplicate
+   - Related but distinct aspects = keep both
+
+## Classification
+
+(A) **DUPLICATE** - Suggestions address the SAME issue in the SAME way
+   - Same category, high keyword overlap, same semantic intent
+   - Action: Merge into one, keeping the higher-scored version
+
+(B) **RELATED** - Suggestions touch the same area but address DIFFERENT aspects
+   - May share some keywords but have distinct approaches
+   - Example: One suggests fixing a bug, another suggests adding tests for that code
+   - Action: Keep both, they provide complementary value
+
+(C) **DIFFERENT** - Suggestions are fundamentally unrelated
+   - Different categories or completely different domains
+   - Action: Keep both, no relationship to track
 
 Respond in JSON format:
 {
   "classification": "A" | "B" | "C",
-  "isDuplicate": true if classification is "A", false otherwise,
-  "reason": "Brief explanation"
+  "isDuplicate": true,
+  "categoryMatch": true,
+  "keywordOverlap": ["shared", "keywords"],
+  "suggestion1Keywords": ["key1", "key2"],
+  "suggestion2Keywords": ["key2", "key3"],
+  "semanticSimilarity": 0.85,
+  "reason": "Both suggestions address the same authentication bug with identical approaches"
 }`,
 
-  user: (suggestion1: string, suggestion2: string) => `Compare these two suggestions.
+  user: (suggestion1: string, suggestion2: string) => `Compare these two suggestions for potential duplication.
 
 Suggestion A:
 ${suggestion1}
@@ -243,7 +319,8 @@ ${suggestion1}
 Suggestion B:
 ${suggestion2}
 
-Classify their relationship (A=combine, B=related, C=different).`
+Analyze category match, keyword overlap, and semantic similarity.
+Classify as: (A) DUPLICATE, (B) RELATED, or (C) DIFFERENT.`
 }
 
 // ============================================================

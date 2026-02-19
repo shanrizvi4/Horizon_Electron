@@ -175,10 +175,10 @@ export function useSuggestions(): UseSuggestionsReturn {
    *
    * Methods:
    * - 'recent': Most recently updated first
-   * - 'important': Highest score (support * benefit) first
+   * - 'importance': Highest composite score first (importance + confidence + timeliness + actionability)
    *
    * @param suggestions - Array of suggestions to sort
-   * @param method - Sort method ('recent' or 'important')
+   * @param method - Sort method ('recent' or 'importance')
    * @returns New sorted array (original unchanged)
    */
   const sortSuggestions = useCallback((suggestions: Suggestion[], method: SortMethod) => {
@@ -188,10 +188,10 @@ export function useSuggestions(): UseSuggestionsReturn {
       // Sort by most recently updated/created
       sorted.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
     } else {
-      // Sort by importance score (support * benefit)
+      // Sort by composite score (0.3*importance + 0.4*confidence + 0.2*timeliness + 0.1*actionability)
       sorted.sort((a, b) => {
-        const scoreA = a.support * a.utilities.benefit
-        const scoreB = b.support * b.utilities.benefit
+        const scoreA = a.utilities.compositeScore || 0
+        const scoreB = b.utilities.compositeScore || 0
         return scoreB - scoreA
       })
     }

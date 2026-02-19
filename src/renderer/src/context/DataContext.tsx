@@ -66,15 +66,6 @@ import type {
   CustomizeAgentData,
   AppSettings
 } from '../types'
-import {
-  mockProjects,
-  mockSuggestions,
-  mockChats,
-  mockUserPropositions,
-  mockAgentConfig,
-  mockStudyStatus,
-  mockSettings
-} from '../data/mockData'
 
 // =============================================================================
 // ENVIRONMENT DETECTION
@@ -85,7 +76,7 @@ import {
  *
  * When running in:
  * - Electron: window.api is exposed by the preload script
- * - Browser/Dev: window.api is undefined, use mock data
+ * - Browser/Dev: window.api is undefined, use empty defaults
  *
  * @returns True if Electron API is available
  */
@@ -138,16 +129,21 @@ type DataAction =
 /**
  * Default state used on first run or when backend is unavailable.
  *
- * Uses mock data to provide a functional demo experience.
+ * Uses empty defaults - all data comes from the backend.
  */
 const defaultState: AppState = {
-  projects: mockProjects,
-  suggestions: mockSuggestions,
-  chats: mockChats,
-  userPropositions: mockUserPropositions,
-  agentConfig: mockAgentConfig,
-  studyStatus: mockStudyStatus,
-  settings: mockSettings
+  projects: [],
+  suggestions: [],
+  chats: [],
+  userPropositions: [],
+  agentConfig: { focusMoreOn: '', focusLessOn: '', style: '' },
+  studyStatus: { status: 'active' },
+  settings: {
+    notificationFrequency: 5,
+    recordingEnabled: false,
+    disablePopup: false,
+    hasCompletedOnboarding: false
+  }
 }
 
 // =============================================================================

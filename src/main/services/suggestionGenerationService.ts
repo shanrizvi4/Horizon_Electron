@@ -13,10 +13,13 @@ export interface GeneratedSuggestion {
   id: string
   title: string
   description: string
+  category: 'problem' | 'efficiency' | 'learning'
   approach: string
   keywords: string[]
   supportEvidence: string[]
   rawSupport: number // 1-10 scale before filtering
+  confidence: number // 0-1 scale - how confident the LLM is in this suggestion
+  decayProfile: 'ephemeral' | 'session' | 'durable' | 'evergreen'
   sourceFrames: string[] // Frame IDs that contributed to this suggestion
   initialChatMessage: string // Pre-generated message shown when user starts chat
   generatedAt: number
@@ -32,15 +35,6 @@ export interface SuggestionGenerationResult {
 class SuggestionGenerationService {
   private generationDir: string = ''
   private lastProcessedTimestamp: number = 0
-  private useLLM: boolean = false
-
-  /**
-   * Enables or disables real LLM calls.
-   */
-  setUseLLM(enabled: boolean): void {
-    this.useLLM = enabled
-    console.log(`Suggestion generation LLM mode: ${enabled ? 'ENABLED' : 'DISABLED'}`)
-  }
 
   async initialize(): Promise<void> {
     this.generationDir = path.join(dataStore.getDataDir(), 'suggestion_generation')
@@ -83,21 +77,9 @@ class SuggestionGenerationService {
     const frameAnalysesText = formatFrameAnalysesForPrompt(newAnalyses)
     const userPropositions = dataStore.getPropositions().map(p => `- ${p.text}`).join('\n')
 
-    let suggestions: GeneratedSuggestion[]
-
-    if (this.useLLM) {
-      console.log('\n--- CALLING GEMINI API (Suggestion Generation) ---')
-      try {
-        suggestions = await this.generateWithLLM(frameAnalysesText, userPropositions, newAnalyses)
-        console.log('--- GEMINI RESPONSE RECEIVED ---\n')
-      } catch (error) {
-        console.error('Suggestion generation LLM failed, falling back to hardcoded:', error)
-        suggestions = this.generateHardcodedSuggestions(newAnalyses)
-      }
-    } else {
-      console.log('\n--- SUGGESTION GENERATION (hardcoded mode) ---')
-      suggestions = this.generateHardcodedSuggestions(newAnalyses)
-    }
+    console.log('\n--- CALLING GEMINI API (Suggestion Generation) ---')
+    const suggestions = await this.generateWithLLM(frameAnalysesText, userPropositions, newAnalyses)
+    console.log('--- GEMINI RESPONSE RECEIVED ---\n')
 
     const result: SuggestionGenerationResult = {
       batchId,
@@ -181,14 +163,25 @@ class SuggestionGenerationService {
 
       for (let i = 0; i < rawSuggestions.length; i++) {
         const s = rawSuggestions[i]
+
+        // Only include suggestions with confidence >= 0.5
+        const confidence = s.confidence ?? 0.7
+        if (confidence < 0.5) {
+          console.log(`Skipping suggestion "${s.title}" with low confidence: ${confidence}`)
+          continue
+        }
+
         suggestions.push({
           id: `sug_gen_${now}_${i}`,
           title: s.title || 'Untitled suggestion',
           description: s.description || '',
+          category: s.category || 'efficiency',
           approach: s.approach || '',
           keywords: s.keywords || [],
           supportEvidence: s.supportEvidence || analyses.slice(0, 3).map(a => a.analysis.description),
           rawSupport: s.rawSupport || s.support || 7,
+          confidence,
+          decayProfile: s.decayProfile || 'session',
           sourceFrames: analyses.map(a => a.frameId),
           initialChatMessage: s.initialChatMessage || '',
           generatedAt: now
@@ -197,70 +190,9 @@ class SuggestionGenerationService {
 
       return suggestions
     } catch {
-      console.error('Failed to parse LLM response, attempting to extract suggestions from text')
-      // If JSON parsing fails, return empty array and let hardcoded fallback handle it
+      console.error('Failed to parse LLM response as JSON')
       throw new Error('Failed to parse LLM response as JSON')
     }
-  }
-
-  private generateHardcodedSuggestions(analyses: FrameAnalysis[]): GeneratedSuggestion[] {
-    // Aggregate keywords from all analyses
-    const allKeywords = analyses.flatMap(a => a.analysis.keywords)
-    const keywordCounts = new Map<string, number>()
-    for (const kw of allKeywords) {
-      keywordCounts.set(kw, (keywordCounts.get(kw) || 0) + 1)
-    }
-
-    // Sort by frequency
-    const topKeywords = Array.from(keywordCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([kw]) => kw)
-
-    const suggestions: GeneratedSuggestion[] = []
-    const now = Date.now()
-
-    // Generate 1-3 suggestions based on detected patterns
-    const templates = [
-      {
-        titleTemplate: 'Review ${keyword} best practices',
-        descriptionTemplate: 'Based on your recent activity with ${keyword}, reviewing best practices could improve your workflow.',
-        approach: 'Research documentation and apply relevant patterns'
-      },
-      {
-        titleTemplate: 'Optimize ${keyword} workflow',
-        descriptionTemplate: 'You\'ve been spending time on ${keyword}. Consider optimizing this workflow.',
-        approach: 'Identify bottlenecks and implement improvements'
-      },
-      {
-        titleTemplate: 'Document ${keyword} process',
-        descriptionTemplate: 'Your work with ${keyword} could benefit from documentation for future reference.',
-        approach: 'Create clear documentation with examples'
-      }
-    ]
-
-    const numSuggestions = Math.min(topKeywords.length, 3)
-    for (let i = 0; i < numSuggestions; i++) {
-      const keyword = topKeywords[i]
-      const template = templates[i % templates.length]
-
-      const title = template.titleTemplate.replace('${keyword}', keyword)
-      const description = template.descriptionTemplate.replace('${keyword}', keyword)
-      suggestions.push({
-        id: `sug_gen_${now}_${i}`,
-        title,
-        description,
-        approach: template.approach,
-        keywords: [keyword, ...topKeywords.slice(0, 3)],
-        supportEvidence: analyses.slice(0, 3).map(a => a.analysis.description),
-        rawSupport: 5 + Math.floor(Math.random() * 5), // 5-9
-        sourceFrames: analyses.map(a => a.frameId),
-        initialChatMessage: '', // Generated by LLM, empty for hardcoded fallback
-        generatedAt: now
-      })
-    }
-
-    return suggestions
   }
 
   async getAllGenerationResults(): Promise<SuggestionGenerationResult[]> {

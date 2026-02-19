@@ -9,13 +9,7 @@ import { configService } from './services/config'
 import { screenCaptureService } from './services/screenCapture'
 import { mouseTrackerService } from './services/mouseTracker'
 import { pipelineService } from './services/pipelineService'
-import { frameAnalysisService } from './services/frameAnalysisService'
-import { suggestionGenerationService } from './services/suggestionGenerationService'
-import { scoringFilteringService } from './services/scoringFilteringService'
-import { deduplicationService } from './services/deduplicationService'
 import { evaluationDataService } from '../eval/main'
-// import { testPipeline } from './services/pipelineTest'
-// import { runFullLLMPipeline } from './services/llmPipelineTest'  // For testing
 import { registerAllIpcHandlers } from './ipc'
 import { setPopupFunctions, notifyPopupVisibilityChange } from './ipc/popup'
 
@@ -429,28 +423,14 @@ async function initializeServices(): Promise<void> {
 
   // 5. Start screen capture if enabled in settings
   const settings = dataStore.getSettings()
-  const USE_FAKE_SUGGESTIONS = false // Use real LLM pipeline
 
   if (settings.recordingEnabled) {
-    if (USE_FAKE_SUGGESTIONS) {
-      // Use fake suggestions for development
-      const { fakeSuggestionService } = await import('./services/fakeSuggestionService')
-      fakeSuggestionService.start()
-      console.log('Fake suggestion service started')
-    } else {
-      // Enable LLM mode for ALL pipeline services
-      frameAnalysisService.setUseLLM(true)
-      suggestionGenerationService.setUseLLM(true)
-      scoringFilteringService.setUseLLM(true)
-      deduplicationService.setUseLLM(true)
+    screenCaptureService.start()
+    console.log('Screen capture service started')
 
-      screenCaptureService.start()
-      console.log('Screen capture service started')
-
-      // 6. Start pipeline service (processes screenshots through all 5 steps)
-      pipelineService.start()
-      console.log('Pipeline service started')
-    }
+    // 6. Start pipeline service (processes screenshots through all 5 steps)
+    pipelineService.start()
+    console.log('Pipeline service started')
   }
 
   // 7. Initialize mouse tracker for popup trigger
@@ -462,24 +442,6 @@ async function initializeServices(): Promise<void> {
     console.log(`${step.step}: ${step.directory}`)
   }
   console.log('============================\n')
-
-  // Tests disabled by default - run manually with TEST_PIPELINE=1 or TEST_LLM=1
-  // if (process.env.TEST_PIPELINE === '1') {
-  //   console.log('Running pipeline verification test...')
-  //   const testResults = await testPipeline(dataStore.getDataDir())
-  //   const allPassed = testResults.every(r => r.passed)
-  //   if (!allPassed) {
-  //     console.error('WARNING: Some pipeline tests failed!')
-  //   }
-  // }
-
-  // LLM pipeline test - uncomment to run on startup
-  // console.log('\n*** FULL LLM PIPELINE TEST MODE ***')
-  // try {
-  //   await runFullLLMPipeline()
-  // } catch (error) {
-  //   console.error('LLM Pipeline test failed:', error)
-  // }
 
   console.log('All services initialized')
 }

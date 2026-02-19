@@ -15,12 +15,15 @@ export interface Suggestion {
   projectId: number
   title: string
   description: string
+  category: 'problem' | 'efficiency' | 'learning'
   initialPrompt: string
   status: 'active' | 'closed' | 'complete'
   keywords: string[]
   approach: string
   executionOutput: string
   executionSummary: { title: string; description: string }
+  confidence: number // 0-1 scale - how confident the LLM is
+  decayProfile: 'ephemeral' | 'session' | 'durable' | 'evergreen'
   support: number
   utilities: Utilities
   grounding: string[]
@@ -32,10 +35,11 @@ export interface Suggestion {
 
 export interface Utilities {
   taskNumber: number
-  benefit: number
-  falsePositiveCost: number
-  falseNegativeCost: number
-  decay: number
+  importance: number     // 0-10: How much value if valid
+  confidence: number     // 0-10: How likely is it correct (highest weight)
+  timeliness: number     // 0-10: Is now the right moment
+  actionability: number  // 0-10: Can user act immediately
+  compositeScore: number // 0.3*importance + 0.4*confidence + 0.2*timeliness + 0.1*actionability
 }
 
 export interface Chat {

@@ -2,7 +2,7 @@
  * GUMBO Theme System
  *
  * Three themes available:
- * - "dusk" (default) - The original blue/slate theme
+ * - "slate" (default) - The original blue/slate theme
  * - "light" - Clean light mode
  * - "dark" - Deep dark mode
  *
@@ -11,10 +11,10 @@
  */
 
 /* ===========================================
-   DUSK THEME (Default) - Blue/Slate
+   SLATE THEME (Default) - Blue/Slate
    =========================================== */
 :root,
-[data-theme="dusk"] {
+[data-theme="slate"] {
   /* Main background */
   --theme-bg-main: #46576B;
 

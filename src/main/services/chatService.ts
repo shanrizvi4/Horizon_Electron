@@ -10,7 +10,7 @@
  * - Streaming responses (real-time text generation)
  * - Context building from chat history, suggestions, and user preferences
  * - Automatic retry with exponential backoff
- * - Fallback to mock responses when API unavailable
+ * - Automatic retry with error propagation when API unavailable
  *
  * DATA FLOW:
  * ┌─────────────────────────────────────────────────────────────────────────┐
@@ -29,7 +29,6 @@
  * │                                      ▼                                  │
  * │                          ┌─────────────────────────────────────────┐   │
  * │                          │ Gemini API (streaming)                  │   │
- * │                          │  or Mock Response (fallback)            │   │
  * │                          └─────────────────────────────────────────┘   │
  * │                                      │                                  │
  * │                                      ▼                                  │
@@ -54,7 +53,7 @@ import { configService } from './config'
 const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent'
 
-/** Maximum retry attempts before falling back to mock response */
+/** Maximum retry attempts before throwing error */
 const MAX_RETRIES = 3
 
 /** Base delay between retries (multiplied by attempt number) */
@@ -313,11 +312,9 @@ class ChatService {
     console.log('Chat initialPrompt:', chat.initialPrompt?.slice(0, 100))
     console.log('========================')
 
-    // Fall back to mock if no API key configured
+    // Require API key
     if (!apiKey) {
-      console.log('No Gemini API key configured, using mock response')
-      await this.generateMockResponse(onChunk)
-      return
+      throw new Error('No Gemini API key configured. Please add your API key in Settings.')
     }
 
     // Build the API request
@@ -339,9 +336,8 @@ class ChatService {
       }
     }
 
-    // All retries exhausted - fall back to mock
-    console.error('All Gemini API attempts failed, using mock response')
-    await this.generateMockResponse(onChunk)
+    // All retries exhausted
+    throw new Error('All Gemini API attempts failed. Please check your API key and try again.')
   }
 
   /**
@@ -434,61 +430,6 @@ class ChatService {
           // Ignore parse errors
         }
       }
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Mock Response (Fallback)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Generates a mock response when API is unavailable.
-   * Simulates streaming by sending chunks with delays.
-   *
-   * Used when:
-   * - No API key is configured
-   * - All API retry attempts fail
-   */
-  private async generateMockResponse(onChunk: (chunk: string) => void): Promise<void> {
-    const responses = [
-      "I understand you're asking about this topic. Let me help you with that.\n\n" +
-        'Based on the context you\'ve provided, here are some key insights:\n\n' +
-        '1. **First consideration** - This is an important aspect to keep in mind.\n\n' +
-        '2. **Second point** - Building on the first idea, we can see connections.\n\n' +
-        '3. **Practical suggestion** - Here\'s what I\'d recommend as a next step.\n\n' +
-        'Would you like me to elaborate on any of these points?',
-
-      'Thank you for your question. Let me break this down:\n\n' +
-        '**Analysis:**\n' +
-        'Looking at the information available, there are several factors to consider.\n\n' +
-        '**Recommendations:**\n' +
-        '- Start by understanding the core requirements\n' +
-        '- Consider the trade-offs between different approaches\n' +
-        '- Test your assumptions with small experiments\n\n' +
-        "What aspect would you like to explore further?",
-
-      'Great question! Here\'s my perspective:\n\n' +
-        'The key insight here is understanding how different components interact.\n\n' +
-        '**Key Takeaways:**\n' +
-        '1. Context matters - always consider the broader environment\n' +
-        '2. Iterate quickly - small experiments reveal valuable information\n' +
-        '3. Document learnings - future decisions benefit from past insights\n\n' +
-        "Let me know if you'd like to dive deeper into any specific area."
-    ]
-
-    // Select a random response
-    const response = responses[Math.floor(Math.random() * responses.length)]
-
-    // Simulate streaming by sending word chunks
-    const words = response.split(' ')
-    const chunkSize = 3 // Words per chunk
-
-    for (let i = 0; i < words.length; i += chunkSize) {
-      const chunk = words.slice(i, i + chunkSize).join(' ') + ' '
-      onChunk(chunk)
-
-      // Simulate typing delay (50-100ms per chunk)
-      await this.delay(50 + Math.random() * 50)
     }
   }
 

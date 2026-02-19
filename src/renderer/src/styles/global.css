@@ -29,8 +29,8 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Subtle gradient background for dusk theme only */
-[data-theme="dusk"] body {
+/* Subtle gradient background for slate theme only */
+[data-theme="slate"] body {
   background: linear-gradient(
     135deg,
     #495a6e 0%,

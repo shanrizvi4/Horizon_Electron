@@ -28,20 +28,16 @@ interface SimilarityPair {
   similarity: number
   isDuplicate: boolean
   classification: string
+  categoryMatch: boolean
+  keywordOverlap: string[]
+  suggestion1Keywords: string[]
+  suggestion2Keywords: string[]
+  semanticSimilarity: number
   reason: string
 }
 
 class DeduplicationService {
   private deduplicationDir: string = ''
-  private useLLM: boolean = false
-
-  /**
-   * Enables or disables real LLM calls.
-   */
-  setUseLLM(enabled: boolean): void {
-    this.useLLM = enabled
-    console.log(`Deduplication LLM mode: ${enabled ? 'ENABLED' : 'DISABLED'}`)
-  }
 
   async initialize(): Promise<void> {
     this.deduplicationDir = path.join(dataStore.getDataDir(), 'deduplication')
@@ -67,54 +63,17 @@ class DeduplicationService {
     // Also compare against existing suggestions in dataStore
     const existingSuggestions = dataStore.getActiveSuggestions()
 
-    let unique: ScoredSuggestion[]
-    let duplicates: Array<{ suggestion: ScoredSuggestion; duplicateOf: string; similarityScore: number }>
-    let similarities: SimilarityPair[]
-
-    if (this.useLLM) {
-      console.log('\n--- CALLING GEMINI API (Deduplication) ---')
-      try {
-        const result = await this.deduplicateWithLLM(
-          suggestions,
-          existingSuggestions.map(s => ({
-            id: s.suggestionId,
-            title: s.title,
-            description: s.description,
-            keywords: s.keywords
-          }))
-        )
-        unique = result.unique
-        duplicates = result.duplicates
-        similarities = result.similarities
-        console.log('--- GEMINI RESPONSE RECEIVED ---\n')
-      } catch (error) {
-        console.error('Deduplication LLM failed, falling back to hardcoded:', error)
-        const result = this.deduplicateHardcoded(
-          suggestions,
-          existingSuggestions.map(s => ({
-            id: s.suggestionId,
-            title: s.title,
-            keywords: s.keywords
-          }))
-        )
-        unique = result.unique
-        duplicates = result.duplicates
-        similarities = result.similarities
-      }
-    } else {
-      console.log('\n--- DEDUPLICATION (hardcoded mode) ---')
-      const result = this.deduplicateHardcoded(
-        suggestions,
-        existingSuggestions.map(s => ({
-          id: s.suggestionId,
-          title: s.title,
-          keywords: s.keywords
-        }))
-      )
-      unique = result.unique
-      duplicates = result.duplicates
-      similarities = result.similarities
-    }
+    console.log('\n--- CALLING GEMINI API (Deduplication) ---')
+    const { unique, duplicates, similarities } = await this.deduplicateWithLLM(
+      suggestions,
+      existingSuggestions.map(s => ({
+        id: s.suggestionId,
+        title: s.title,
+        description: s.description,
+        keywords: s.keywords
+      }))
+    )
+    console.log('--- GEMINI RESPONSE RECEIVED ---\n')
 
     // Build clusters
     const clusters = new Map<string, ScoredSuggestion[]>()
@@ -228,7 +187,8 @@ class DeduplicationService {
           const parsed = JSON.parse(jsonText)
           const classification = parsed.classification || 'C'
           const isThisDuplicate = parsed.isDuplicate || classification === 'A'
-          const similarity = classification === 'A' ? 0.9 : classification === 'B' ? 0.5 : 0.1
+          const semanticSimilarity = parsed.semanticSimilarity ?? (classification === 'A' ? 0.9 : classification === 'B' ? 0.5 : 0.1)
+          const similarity = semanticSimilarity
 
           similarities.push({
             suggestion1Id: suggestion.id,
@@ -236,6 +196,11 @@ class DeduplicationService {
             similarity,
             isDuplicate: isThisDuplicate,
             classification,
+            categoryMatch: parsed.categoryMatch ?? false,
+            keywordOverlap: parsed.keywordOverlap || [],
+            suggestion1Keywords: parsed.suggestion1Keywords || suggestion.keywords || [],
+            suggestion2Keywords: parsed.suggestion2Keywords || existing.keywords || [],
+            semanticSimilarity,
             reason: parsed.reason || 'LLM classification'
           })
 
@@ -299,7 +264,8 @@ class DeduplicationService {
           const parsed = JSON.parse(jsonText)
           const classification = parsed.classification || 'C'
           const isThisDuplicate = parsed.isDuplicate || classification === 'A'
-          const similarity = classification === 'A' ? 0.9 : classification === 'B' ? 0.5 : 0.1
+          const semanticSimilarity = parsed.semanticSimilarity ?? (classification === 'A' ? 0.9 : classification === 'B' ? 0.5 : 0.1)
+          const similarity = semanticSimilarity
 
           similarities.push({
             suggestion1Id: suggestion.id,
@@ -307,6 +273,11 @@ class DeduplicationService {
             similarity,
             isDuplicate: isThisDuplicate,
             classification,
+            categoryMatch: parsed.categoryMatch ?? (suggestion.category === uniqueSuggestion.category),
+            keywordOverlap: parsed.keywordOverlap || [],
+            suggestion1Keywords: parsed.suggestion1Keywords || suggestion.keywords || [],
+            suggestion2Keywords: parsed.suggestion2Keywords || uniqueSuggestion.keywords || [],
+            semanticSimilarity,
             reason: parsed.reason || 'LLM classification'
           })
 
@@ -335,106 +306,6 @@ class DeduplicationService {
     }
 
     return { unique, duplicates, similarities }
-  }
-
-  private readonly SIMILARITY_THRESHOLD = 0.7 // For hardcoded fallback
-
-  private deduplicateHardcoded(
-    newSuggestions: ScoredSuggestion[],
-    existingSuggestions: Array<{ id: string; title: string; keywords: string[] }>
-  ): {
-    unique: ScoredSuggestion[]
-    duplicates: Array<{ suggestion: ScoredSuggestion; duplicateOf: string; similarityScore: number }>
-    similarities: SimilarityPair[]
-  } {
-    const unique: ScoredSuggestion[] = []
-    const duplicates: Array<{ suggestion: ScoredSuggestion; duplicateOf: string; similarityScore: number }> = []
-    const similarities: SimilarityPair[] = []
-
-    for (const suggestion of newSuggestions) {
-      let isDuplicate = false
-      let highestSimilarity = 0
-      let mostSimilarId = ''
-
-      // Check against existing suggestions in dataStore
-      for (const existing of existingSuggestions) {
-        const similarity = this.calculateSimilarity(
-          { title: suggestion.title, keywords: suggestion.keywords },
-          { title: existing.title, keywords: existing.keywords }
-        )
-
-        similarities.push({
-          suggestion1Id: suggestion.id,
-          suggestion2Id: existing.id,
-          similarity,
-          isDuplicate: similarity >= this.SIMILARITY_THRESHOLD,
-          classification: similarity >= 0.7 ? 'A' : similarity >= 0.4 ? 'B' : 'C',
-          reason: `Keyword overlap and title similarity`
-        })
-
-        if (similarity > highestSimilarity) {
-          highestSimilarity = similarity
-          mostSimilarId = existing.id
-        }
-
-        if (similarity >= this.SIMILARITY_THRESHOLD) {
-          isDuplicate = true
-        }
-      }
-
-      // Check against already-accepted unique suggestions from this batch
-      for (const uniqueSuggestion of unique) {
-        const similarity = this.calculateSimilarity(
-          { title: suggestion.title, keywords: suggestion.keywords },
-          { title: uniqueSuggestion.title, keywords: uniqueSuggestion.keywords }
-        )
-
-        similarities.push({
-          suggestion1Id: suggestion.id,
-          suggestion2Id: uniqueSuggestion.id,
-          similarity,
-          isDuplicate: similarity >= this.SIMILARITY_THRESHOLD,
-          classification: similarity >= 0.7 ? 'A' : similarity >= 0.4 ? 'B' : 'C',
-          reason: `Keyword overlap and title similarity`
-        })
-
-        if (similarity > highestSimilarity) {
-          highestSimilarity = similarity
-          mostSimilarId = uniqueSuggestion.id
-        }
-
-        if (similarity >= this.SIMILARITY_THRESHOLD) {
-          isDuplicate = true
-        }
-      }
-
-      if (isDuplicate) {
-        duplicates.push({
-          suggestion,
-          duplicateOf: mostSimilarId,
-          similarityScore: highestSimilarity
-        })
-      } else {
-        unique.push(suggestion)
-      }
-    }
-
-    return { unique, duplicates, similarities }
-  }
-
-  private calculateSimilarity(
-    a: { title: string; keywords: string[] },
-    b: { title: string; keywords: string[] }
-  ): number {
-    // Simple keyword overlap + title word overlap
-    const aKeywords = new Set([...a.keywords, ...a.title.toLowerCase().split(/\s+/)])
-    const bKeywords = new Set([...b.keywords, ...b.title.toLowerCase().split(/\s+/)])
-
-    const intersection = new Set([...aKeywords].filter(x => bKeywords.has(x)))
-    const union = new Set([...aKeywords, ...bKeywords])
-
-    // Jaccard similarity
-    return intersection.size / union.size
   }
 
   async getAllDeduplicationResults(): Promise<Array<DeduplicationResult & { similarities: SimilarityPair[] }>> {

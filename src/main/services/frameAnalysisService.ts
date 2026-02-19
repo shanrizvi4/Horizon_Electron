@@ -10,8 +10,7 @@
  * Screenshots → [FRAME ANALYSIS] → Suggestion Generation → Scoring → Deduplication
  *
  * FEATURES:
- * - Watches for new screenshots and analyzes them
- * - Supports both real LLM analysis and hardcoded fallback
+ * - Watches for new screenshots and analyzes them via Gemini Vision API
  * - Persists analysis results to disk
  * - Single-frame test mode for debugging
  *
@@ -62,8 +61,6 @@ export interface FrameAnalysis {
   }
   /** When this analysis was performed */
   processedAt: number
-  /** Whether real LLM was used (vs hardcoded) */
-  usedLLM?: boolean
 }
 
 // =============================================================================
@@ -79,9 +76,6 @@ export interface FrameAnalysis {
  *
  * // Initialize on startup
  * await frameAnalysisService.initialize()
- *
- * // Enable real LLM calls (otherwise uses hardcoded)
- * frameAnalysisService.setUseLLM(true)
  *
  * // Start watching for new frames
  * frameAnalysisService.start()
@@ -103,25 +97,8 @@ class FrameAnalysisService {
   /** Set of already processed frame IDs */
   private processedFrames: Set<string> = new Set()
 
-  /** Whether to use real LLM or hardcoded analysis */
-  private useLLM: boolean = false
-
   /** Lock to prevent concurrent processing */
   private isProcessing: boolean = false
-
-  // ---------------------------------------------------------------------------
-  // Configuration
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Enables or disables real LLM calls.
-   *
-   * When disabled, uses hardcoded mock analysis for testing.
-   */
-  setUseLLM(enabled: boolean): void {
-    this.useLLM = enabled
-    console.log(`Frame analysis LLM mode: ${enabled ? 'ENABLED' : 'DISABLED'}`)
-  }
 
   // ---------------------------------------------------------------------------
   // Initialization
@@ -234,33 +211,16 @@ class FrameAnalysisService {
 
     console.log(`Analyzing frame: ${frameFile}`)
 
-    let analysis: FrameAnalysis['analysis']
-    let usedLLM = false
-
-    if (this.useLLM) {
-      // Use real LLM
-      console.log('\n--- CALLING GEMINI VISION API ---')
-      try {
-        analysis = await this.analyzeWithGemini(framePath)
-        usedLLM = true
-        console.log('--- GEMINI RESPONSE RECEIVED ---\n')
-      } catch (error) {
-        console.error('Gemini API failed, falling back to hardcoded:', error)
-        analysis = this.generateHardcodedAnalysis(timestamp)
-      }
-    } else {
-      // Use hardcoded analysis
-      console.log('\n--- FRAME ANALYSIS (hardcoded mode) ---')
-      analysis = this.generateHardcodedAnalysis(timestamp)
-    }
+    console.log('\n--- CALLING GEMINI VISION API ---')
+    const analysis = await this.analyzeWithGemini(framePath)
+    console.log('--- GEMINI RESPONSE RECEIVED ---\n')
 
     const frameAnalysis: FrameAnalysis = {
       frameId,
       framePath,
       timestamp,
       analysis,
-      processedAt: Date.now(),
-      usedLLM
+      processedAt: Date.now()
     }
 
     // Save to disk
@@ -365,46 +325,6 @@ class FrameAnalysisService {
         applications: ['unknown'],
         keywords: ['analysis', 'pending']
       }
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Hardcoded Analysis (Fallback)
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Generates hardcoded mock analysis for testing.
-   */
-  private generateHardcodedAnalysis(timestamp: number): FrameAnalysis['analysis'] {
-    const activities = [
-      ['coding', 'editing files', 'debugging'],
-      ['browsing documentation', 'reading articles'],
-      ['using terminal', 'running commands'],
-      ['reviewing code', 'comparing changes'],
-      ['writing notes', 'organizing tasks']
-    ]
-    const applications = [
-      ['VS Code', 'Terminal'],
-      ['Chrome', 'Safari'],
-      ['Slack', 'Discord'],
-      ['Finder', 'Notes'],
-      ['Xcode', 'Simulator']
-    ]
-    const descriptions = [
-      'User appears to be working on a coding project with multiple files open.',
-      'User is browsing technical documentation or research materials.',
-      'User is running commands in terminal, possibly building or testing.',
-      'User is reviewing changes in a version control interface.',
-      'User is organizing notes or planning tasks.'
-    ]
-
-    const index = Math.floor((timestamp / 1000) % 5)
-
-    return {
-      description: descriptions[index],
-      activities: activities[index],
-      applications: applications[index],
-      keywords: [...activities[index], ...applications[index]].map((s) => s.toLowerCase())
     }
   }
 
@@ -522,8 +442,7 @@ class FrameAnalysisService {
         framePath,
         timestamp,
         analysis,
-        processedAt: Date.now(),
-        usedLLM: true
+        processedAt: Date.now()
       }
 
       const analysisPath = path.join(this.analysisDir, `${frameId}.json`)

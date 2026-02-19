@@ -1,22 +1,23 @@
 /**
  * Onboarding Flow Component
  *
- * Main container for the 3-step onboarding flow.
+ * Main container for the 4-step onboarding flow.
  * Manages step navigation and completion.
  */
 
 import React, { useState } from 'react'
 import { WelcomeStep } from './WelcomeStep'
+import { ThemeStep } from './ThemeStep'
 import { PermissionsStep } from './PermissionsStep'
 import { GetStartedStep } from './GetStartedStep'
 
-type OnboardingStep = 'welcome' | 'permissions' | 'getStarted'
+type OnboardingStep = 'welcome' | 'theme' | 'permissions' | 'getStarted'
 
 interface OnboardingFlowProps {
   onComplete: (enableRecording: boolean) => void
 }
 
-const STEPS: OnboardingStep[] = ['welcome', 'permissions', 'getStarted']
+const STEPS: OnboardingStep[] = ['welcome', 'theme', 'permissions', 'getStarted']
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
@@ -55,6 +56,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
       {/* Step content - centered */}
       {currentStep === 'welcome' && <WelcomeStep onNext={goToNext} />}
+      {currentStep === 'theme' && (
+        <ThemeStep onNext={goToNext} onBack={goToPrevious} />
+      )}
       {currentStep === 'permissions' && (
         <PermissionsStep onNext={goToNext} onBack={goToPrevious} />
       )}

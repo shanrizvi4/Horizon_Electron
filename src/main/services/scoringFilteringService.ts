@@ -11,11 +11,11 @@ const GEMINI_API_URL =
 
 export interface ScoredSuggestion extends GeneratedSuggestion {
   scores: {
-    benefit: number        // 1-10: How beneficial is this suggestion
-    disruptionCost: number // 1-10: How disruptive would unsolicited help be
-    missCost: number       // 1-10: How critical if user misses this
-    decay: number          // 1-10: How much benefit diminishes over time
-    combined: number       // 0-1: Weighted combination
+    importance: number     // 0-10: How much value if valid
+    confidence: number     // 0-10: How likely is it correct (highest weight)
+    timeliness: number     // 0-10: Is now the right moment (stuck vs flow)
+    actionability: number  // 0-10: Can user act immediately
+    compositeScore: number // Weighted: 0.3*importance + 0.4*confidence + 0.2*timeliness + 0.1*actionability
   }
   filterDecision: {
     passed: boolean
@@ -35,15 +35,6 @@ export interface ScoringResult {
 
 class ScoringFilteringService {
   private scoringDir: string = ''
-  private useLLM: boolean = false
-
-  /**
-   * Enables or disables real LLM calls.
-   */
-  setUseLLM(enabled: boolean): void {
-    this.useLLM = enabled
-    console.log(`Scoring/filtering LLM mode: ${enabled ? 'ENABLED' : 'DISABLED'}`)
-  }
 
   async initialize(): Promise<void> {
     this.scoringDir = path.join(dataStore.getDataDir(), 'scoring_filtering')
@@ -67,21 +58,9 @@ class ScoringFilteringService {
     const batchId = `score_${Date.now()}`
     const userContext = dataStore.getPropositions().map(p => `- ${p.text}`).join('\n')
 
-    let scoredSuggestions: ScoredSuggestion[]
-
-    if (this.useLLM) {
-      console.log('\n--- CALLING GEMINI API (Scoring & Filtering) ---')
-      try {
-        scoredSuggestions = await this.scoreWithLLM(suggestions, userContext)
-        console.log('--- GEMINI RESPONSE RECEIVED ---\n')
-      } catch (error) {
-        console.error('Scoring LLM failed, falling back to hardcoded:', error)
-        scoredSuggestions = suggestions.map(s => this.scoreHardcoded(s))
-      }
-    } else {
-      console.log('\n--- SCORING (hardcoded mode) ---')
-      scoredSuggestions = suggestions.map(s => this.scoreHardcoded(s))
-    }
+    console.log('\n--- CALLING GEMINI API (Scoring & Filtering) ---')
+    const scoredSuggestions = await this.scoreWithLLM(suggestions, userContext)
+    console.log('--- GEMINI RESPONSE RECEIVED ---\n')
 
     const passedSuggestions = scoredSuggestions.filter(s => s.filterDecision.passed)
     const filteredOut = scoredSuggestions.filter(s => !s.filterDecision.passed)
@@ -164,73 +143,43 @@ class ScoringFilteringService {
         const parsed = JSON.parse(jsonText)
         const scores = parsed.scores || {}
 
-        // Normalize scores to 0-1 range (they come as 1-10)
-        const benefit = (scores.benefit || 5) / 10
-        const disruptionCost = (scores.disruptionCost || 5) / 10
-        const missCost = (scores.missCost || 5) / 10
-        const decay = (scores.decay || 5) / 10
+        // Get raw scores (0-10 scale)
+        const importance = scores.importance ?? 5
+        const confidence = scores.confidence ?? 5
+        const timeliness = scores.timeliness ?? 5
+        const actionability = scores.actionability ?? 5
 
-        // Combined score: high benefit, low disruption
-        const combined = (benefit * 0.5) + ((1 - disruptionCost) * 0.3) + (missCost * 0.2)
+        // Calculate composite score: 0.3*importance + 0.4*confidence + 0.2*timeliness + 0.1*actionability
+        const compositeScore = parsed.compositeScore ??
+          (0.3 * importance + 0.4 * confidence + 0.2 * timeliness + 0.1 * actionability)
 
-        // Pass if benefit >= 5 AND disruptionCost <= 6 (from prompt)
-        const passed = parsed.filterDecision?.passed ?? (scores.benefit >= 5 && scores.disruptionCost <= 6)
+        // Pass if ALL dimensions >= 5 AND composite >= 6.0
+        const allAboveThreshold = importance >= 5 && confidence >= 5 && timeliness >= 5 && actionability >= 5
+        const compositeAboveThreshold = compositeScore >= 6.0
+        const passed = parsed.filterDecision?.passed ?? (allAboveThreshold && compositeAboveThreshold)
 
         scoredSuggestions.push({
           ...suggestion,
           scores: {
-            benefit,
-            disruptionCost,
-            missCost,
-            decay,
-            combined
+            importance,
+            confidence,
+            timeliness,
+            actionability,
+            compositeScore
           },
           filterDecision: {
             passed,
-            reason: parsed.filterDecision?.reason || `Benefit: ${scores.benefit}, Disruption: ${scores.disruptionCost}`
+            reason: parsed.filterDecision?.reason ||
+              `I:${importance} C:${confidence} T:${timeliness} A:${actionability} = ${compositeScore.toFixed(1)}`
           },
           scoredAt: Date.now()
         })
       } catch {
-        // If parsing fails, use hardcoded scoring for this suggestion
-        console.error('Failed to parse LLM scoring response, using hardcoded')
-        scoredSuggestions.push(this.scoreHardcoded(suggestion))
+        throw new Error(`Failed to parse LLM scoring response for suggestion: ${suggestion.title}`)
       }
     }
 
     return scoredSuggestions
-  }
-
-  private scoreHardcoded(suggestion: GeneratedSuggestion): ScoredSuggestion {
-    // Hardcoded scoring logic - fallback when LLM fails
-
-    // Derive scores from rawSupport
-    const baseScore = suggestion.rawSupport / 10 // Normalize to 0-1
-
-    const scores = {
-      benefit: Math.min(1, baseScore + (Math.random() * 0.2 - 0.1)),
-      disruptionCost: Math.min(1, 0.3 + Math.random() * 0.3),
-      missCost: Math.min(1, baseScore * 0.6 + 0.2),
-      decay: Math.min(1, 0.5 + Math.random() * 0.3),
-      combined: 0
-    }
-
-    // Calculate combined score
-    scores.combined = (scores.benefit * 0.5) + ((1 - scores.disruptionCost) * 0.3) + (scores.missCost * 0.2)
-
-    const passed = scores.benefit >= 0.5 && scores.disruptionCost <= 0.6
-
-    return {
-      ...suggestion,
-      scores,
-      filterDecision: {
-        passed,
-        reason: passed
-          ? `Benefit ${(scores.benefit * 10).toFixed(0)}/10, Disruption ${(scores.disruptionCost * 10).toFixed(0)}/10`
-          : `Low benefit or high disruption cost`
-      },
-      scoredAt: Date.now()
-    }
   }
 
   async getAllScoringResults(): Promise<ScoringResult[]> {

@@ -88,23 +88,6 @@ class ConcentrationGateService {
   /** Directory for storing concentration gate results */
   private gateDir: string = ''
 
-  /** Whether to use real LLM or hardcoded evaluation */
-  private useLLM: boolean = false
-
-  // ---------------------------------------------------------------------------
-  // Configuration
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Enables or disables real LLM calls.
-   *
-   * When disabled, uses hardcoded evaluation for testing.
-   */
-  setUseLLM(enabled: boolean): void {
-    this.useLLM = enabled
-    console.log(`Concentration gate LLM mode: ${enabled ? 'ENABLED' : 'DISABLED'}`)
-  }
-
   // ---------------------------------------------------------------------------
   // Initialization
   // ---------------------------------------------------------------------------
@@ -153,25 +136,20 @@ class ConcentrationGateService {
 
     let result: ConcentrationResult
 
-    if (this.useLLM) {
-      console.log('\n--- CALLING GEMINI API (Concentration Gate) ---')
-      try {
-        result = await this.evaluateWithLLM(currentFrame, recentFrames)
-        console.log('--- GEMINI RESPONSE RECEIVED ---\n')
-      } catch (error) {
-        console.error('Concentration gate LLM failed, defaulting to CONTINUE:', error)
-        // On error, default to CONTINUE (don't block pipeline)
-        result = {
-          frameId: currentFrame.frameId,
-          decision: 'CONTINUE',
-          importance: 0.5,
-          reason: 'LLM evaluation failed, defaulting to continue',
-          processedAt: Date.now()
-        }
+    console.log('\n--- CALLING GEMINI API (Concentration Gate) ---')
+    try {
+      result = await this.evaluateWithLLM(currentFrame, recentFrames)
+      console.log('--- GEMINI RESPONSE RECEIVED ---\n')
+    } catch (error) {
+      console.error('Concentration gate LLM failed, defaulting to CONTINUE:', error)
+      // On error, default to CONTINUE (don't block pipeline)
+      result = {
+        frameId: currentFrame.frameId,
+        decision: 'CONTINUE',
+        importance: 0.5,
+        reason: 'LLM evaluation failed, defaulting to continue',
+        processedAt: Date.now()
       }
-    } else {
-      console.log('\n--- CONCENTRATION GATE (hardcoded mode) ---')
-      result = this.evaluateHardcoded(currentFrame, recentFrames)
     }
 
     // Apply importance threshold: skip if below threshold
@@ -259,70 +237,6 @@ class ConcentrationGateService {
         reason: `Parsed from text: ${text.slice(0, 100)}`,
         processedAt: Date.now()
       }
-    }
-  }
-
-  /**
-   * Hardcoded evaluation for testing.
-   *
-   * Uses simple heuristics based on detected applications and activities.
-   */
-  private evaluateHardcoded(
-    currentFrame: FrameAnalysis,
-    recentFrames: FrameAnalysis[]
-  ): ConcentrationResult {
-    const analysis = currentFrame.analysis
-
-    // Low-value applications (social media, entertainment)
-    const lowValueApps = ['twitter', 'facebook', 'instagram', 'tiktok', 'youtube', 'netflix', 'reddit']
-    const hasLowValueApp = analysis.applications.some(app =>
-      lowValueApps.some(lv => app.toLowerCase().includes(lv))
-    )
-
-    // High-value activities (work-related)
-    const highValueKeywords = ['coding', 'debugging', 'writing', 'reviewing', 'meeting', 'email', 'document']
-    const hasHighValueActivity = analysis.activities.some(act =>
-      highValueKeywords.some(hv => act.toLowerCase().includes(hv))
-    )
-
-    // Check similarity to recent frames
-    let isSimilarToRecent = false
-    if (recentFrames.length > 0) {
-      const recentApps = recentFrames.flatMap(f => f.analysis.applications)
-      const currentApps = analysis.applications
-      const overlap = currentApps.filter(app => recentApps.includes(app))
-      isSimilarToRecent = overlap.length >= currentApps.length * 0.8
-    }
-
-    // Decision logic
-    let decision: 'CONTINUE' | 'SKIP' = 'CONTINUE'
-    let importance = 0.5
-    let reason = ''
-
-    if (hasLowValueApp && isSimilarToRecent) {
-      decision = 'SKIP'
-      importance = 0.2
-      reason = 'Low-value application with similar recent activity'
-    } else if (hasHighValueActivity) {
-      decision = 'CONTINUE'
-      importance = 0.8
-      reason = 'High-value work activity detected'
-    } else if (isSimilarToRecent && !hasHighValueActivity) {
-      decision = 'SKIP'
-      importance = 0.3
-      reason = 'Similar to recent frames with no high-value activity'
-    } else {
-      decision = 'CONTINUE'
-      importance = 0.5
-      reason = 'New activity pattern detected'
-    }
-
-    return {
-      frameId: currentFrame.frameId,
-      decision,
-      importance,
-      reason,
-      processedAt: Date.now()
     }
   }
 

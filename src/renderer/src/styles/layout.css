@@ -15,8 +15,8 @@
   background-color: var(--bg-main);
 }
 
-/* Dusk theme: transparent content area to show body gradient */
-[data-theme="dusk"] .content-area {
+/* Slate theme: transparent content area to show body gradient */
+[data-theme="slate"] .content-area {
   background-color: transparent;
 }
 
