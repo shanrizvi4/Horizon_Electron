@@ -608,9 +608,6 @@
   pointer-events: none;
   transition: left 0.05s ease-out;
 }
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-}
 
 .study-status-text {
   font-family: var(--font-family-sans);
@@ -678,8 +675,6 @@
 
 .theme-option.active {
   background-color: rgba(var(--glass-rgb), 0.12);
-  outline: 2px solid #6b92bf;
-  outline-offset: -2px;
 }
 
 .theme-option.active::before {

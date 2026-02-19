@@ -545,8 +545,6 @@
 
 .theme-card.active {
   background-color: rgba(var(--glass-rgb), 0.12);
-  outline: 2px solid #6b92bf;
-  outline-offset: -2px;
 }
 
 .theme-card.active::before {
@@ -615,7 +613,7 @@
 
 /* Theme card text */
 .theme-card-name {
-  font-size: calc(var(--font-size-base) + 2px);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-heading);
   text-shadow: var(--text-shadow);
