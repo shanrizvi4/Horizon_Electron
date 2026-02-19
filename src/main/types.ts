@@ -94,6 +94,9 @@ export interface Suggestion {
   /** Evidence/sources that support this suggestion */
   grounding: string[]
 
+  /** Pre-generated initial chat message shown when user starts chat */
+  initialChatMessage?: string
+
   /** Unix timestamp when created */
   createdAt?: number
 

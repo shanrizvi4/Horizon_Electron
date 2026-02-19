@@ -25,6 +25,7 @@ interface Suggestion {
   support: number
   utilities: Utilities
   grounding: string[]
+  initialChatMessage?: string
   createdAt?: number
   updatedAt?: number
   closedAt?: number
@@ -172,6 +173,7 @@ interface GumboAPI {
     navigateToChat: (chatId: string) => Promise<{ success: boolean }>
     disableAutoClose: (durationMs?: number) => Promise<{ success: boolean }>
     onVisibilityChange: (callback: (visible: boolean) => void) => () => void
+    onNavigateToChat: (callback: (chatId: string) => void) => () => void
   }
 
   permissions: {

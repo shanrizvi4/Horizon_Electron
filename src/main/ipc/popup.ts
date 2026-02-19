@@ -198,10 +198,13 @@ export function registerPopupHandlers(): void {
    * @returns Success status
    */
   ipcMain.handle(IPC_CHANNELS.POPUP_NAVIGATE_TO_CHAT, (_event, chatId: string) => {
+    console.log('[popup:navigateToChat] Called with chatId:', chatId)
     if (getMainWindowFn) {
       const mainWindow = getMainWindowFn()
+      console.log('[popup:navigateToChat] Main window found:', !!mainWindow)
       if (mainWindow) {
         // Send navigation event to main window renderer
+        console.log('[popup:navigateToChat] Sending navigate:chat event')
         mainWindow.webContents.send('navigate:chat', chatId)
 
         // Show and focus main window
@@ -213,6 +216,7 @@ export function registerPopupHandlers(): void {
         return { success: true }
       }
     }
+    console.log('[popup:navigateToChat] Failed - main window not found')
     return { success: false, error: 'Main window not found' }
   })
 

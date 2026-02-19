@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import type { PageType, NavigationState } from '../types'
 
 interface NavigationContextValue {
@@ -97,6 +97,22 @@ export function NavigationProvider({ children }: NavigationProviderProps): React
       setSelectedProjectId(null)
     }
   }, [history])
+
+  // Listen for navigation requests from popup
+  useEffect(() => {
+    console.log('[NavigationContext] Setting up onNavigateToChat listener')
+    if (typeof window !== 'undefined' && window.api?.popup?.onNavigateToChat) {
+      console.log('[NavigationContext] onNavigateToChat available, subscribing')
+      const unsubscribe = window.api.popup.onNavigateToChat((chatId: string) => {
+        console.log('[NavigationContext] Received navigate:chat event for chatId:', chatId)
+        setSelectedChatId(chatId)
+        setSelectedProjectId(null)
+      })
+      return unsubscribe
+    } else {
+      console.log('[NavigationContext] onNavigateToChat not available')
+    }
+  }, [])
 
   const value: NavigationContextValue = {
     currentPage,

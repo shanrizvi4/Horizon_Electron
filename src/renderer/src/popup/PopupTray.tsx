@@ -2,15 +2,10 @@ import React, { useState, useMemo, useCallback } from 'react'
 import { PopupSuggestionCard } from './PopupSuggestionCard'
 import { useSuggestions } from '../hooks/useSuggestions'
 import { useData } from '../context/DataContext'
-import type { Chat } from '../types'
-
-interface PopupTrayProps {
-  onOpenChat: (chat: Chat) => void
-}
 
 const TIME_GROUP_ORDER = ['Now', 'Last Hour', 'Today', 'Yesterday', 'This Week', 'Earlier']
 
-export function PopupTray({ onOpenChat }: PopupTrayProps): React.JSX.Element {
+export function PopupTray(): React.JSX.Element {
   const [displayCount, setDisplayCount] = useState(10)
   const { isLoading } = useData()
   const { activeSuggestions, sortSuggestions, groupSuggestionsByTime } = useSuggestions()
@@ -76,7 +71,6 @@ export function PopupTray({ onOpenChat }: PopupTrayProps): React.JSX.Element {
                   <PopupSuggestionCard
                     key={suggestion.suggestionId}
                     suggestion={suggestion}
-                    onOpenChat={onOpenChat}
                   />
                 ))}
               </div>

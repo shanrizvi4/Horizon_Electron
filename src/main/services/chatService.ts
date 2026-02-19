@@ -52,7 +52,7 @@ import { configService } from './config'
 
 /** Gemini API endpoint for streaming content generation */
 const GEMINI_API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent'
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent'
 
 /** Maximum retry attempts before falling back to mock response */
 const MAX_RETRIES = 3
@@ -209,11 +209,8 @@ class ChatService {
       }
     }
 
-    // Add the new user message
-    contents.push({
-      role: 'user',
-      parts: [{ text: userMessage }]
-    })
+    // Note: userMessage is already in chat.messages (added by frontend before API call)
+    // So we don't add it again here
 
     // -------------------------------------------------------------------------
     // Build System Instruction
@@ -308,6 +305,14 @@ class ChatService {
   ): Promise<void> {
     const apiKey = this.getApiKey()
 
+    // Debug logging
+    console.log('=== CHAT SERVICE DEBUG ===')
+    console.log('User message:', userMessage)
+    console.log('Chat messages count:', chat.messages.length)
+    console.log('Chat messages:', chat.messages.map(m => ({ role: m.role, contentPreview: m.content.slice(0, 50), isPlaceholder: m.isPlaceholder })))
+    console.log('Chat initialPrompt:', chat.initialPrompt?.slice(0, 100))
+    console.log('========================')
+
     // Fall back to mock if no API key configured
     if (!apiKey) {
       console.log('No Gemini API key configured, using mock response')
@@ -317,6 +322,7 @@ class ChatService {
 
     // Build the API request
     const request = this.buildGeminiRequest(chat, userMessage)
+    console.log('Request contents:', JSON.stringify(request.contents, null, 2))
 
     // Attempt API call with retries
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {

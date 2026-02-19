@@ -24,6 +24,7 @@ export interface Suggestion {
   support: number
   utilities: Utilities
   grounding: string[]
+  initialChatMessage?: string
   createdAt?: number
   updatedAt?: number
   closedAt?: number

@@ -412,8 +412,22 @@ export function useChat(): UseChatReturn {
         // 5. Call API to generate response (streaming chunks will arrive via listener)
         await window.api.chats.sendMessage(chatId, content.trim())
 
-        // 6. Clean up tracking
+        // 6. Clean up tracking and sync final message content to backend
         streamingMessageIdRef.current.delete(chatId)
+
+        // Get the final message content and sync to backend for persistence
+        const chat = getChatById(chatId)
+        const finalMessage = chat?.messages.find((m) => m.id === placeholderId)
+        if (finalMessage) {
+          syncToBackend({
+            type: 'UPDATE_MESSAGE',
+            payload: {
+              chatId,
+              messageId: placeholderId,
+              updates: { content: finalMessage.content, isPlaceholder: false }
+            }
+          })
+        }
 
         // 7. Mark chat as done loading
         dispatch({
@@ -442,7 +456,7 @@ export function useChat(): UseChatReturn {
         })
       }
     },
-    [addMessage, updateMessage, dispatch, syncToBackend]
+    [addMessage, updateMessage, dispatch, syncToBackend, getChatById]
   )
 
   // ---------------------------------------------------------------------------
@@ -511,11 +525,11 @@ export function useChat(): UseChatReturn {
         associatedSuggestionId: suggestion.suggestionId
       })
 
-      // Add execution output as first assistant message (if exists)
-      if (suggestion.executionOutput) {
+      // Add initial chat message as first assistant message (pre-generated intro)
+      if (suggestion.initialChatMessage) {
         addMessage(chatId, {
           role: 'assistant',
-          content: suggestion.executionOutput,
+          content: suggestion.initialChatMessage,
           isPlaceholder: false,
           isError: false
         })

@@ -72,6 +72,8 @@ interface Suggestion {
   utilities: Utilities
   /** Evidence/source references */
   grounding: string[]
+  /** Pre-generated initial chat message shown when user starts chat */
+  initialChatMessage?: string
   /** Unix timestamp when created */
   createdAt?: number
   /** Unix timestamp when last updated */
@@ -598,6 +600,11 @@ interface GumboAPI {
      * @returns Cleanup function to unsubscribe
      */
     onVisibilityChange: (callback: (visible: boolean) => void) => () => void
+    /**
+     * Subscribe to navigate to chat events from popup.
+     * @returns Cleanup function to unsubscribe
+     */
+    onNavigateToChat: (callback: (chatId: string) => void) => () => void
   }
 
   // ---------------------------------------------------------------------------

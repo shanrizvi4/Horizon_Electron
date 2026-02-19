@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import type { Suggestion, Chat } from '../types'
+import type { Suggestion } from '../types'
 import { useData } from '../context/DataContext'
 import { useSuggestions } from '../hooks/useSuggestions'
 import { useChat } from '../hooks/useChat'
 
 interface PopupSuggestionCardProps {
   suggestion: Suggestion
-  onOpenChat: (chat: Chat) => void
 }
 
 export function PopupSuggestionCard({
-  suggestion,
-  onOpenChat
+  suggestion
 }: PopupSuggestionCardProps): React.JSX.Element {
   const { state } = useData()
   const { dismissSuggestion } = useSuggestions()
-  const { createChat, addMessage, getChat } = useChat()
+  const { createChat, addMessage } = useChat()
   const [isHovered, setIsHovered] = useState(false)
   const [hasMouseMoved, setHasMouseMoved] = useState(false)
 
@@ -37,43 +35,37 @@ export function PopupSuggestionCard({
 
   const handleChatClick = (e: React.MouseEvent): void => {
     e.stopPropagation()
+
+    let chatId: string
+
     if (existingChat) {
-      onOpenChat(existingChat)
+      chatId = existingChat.id
     } else {
       // Create new chat
-      const chatId = createChat({
+      chatId = createChat({
         title: suggestion.title,
         initialPrompt: suggestion.initialPrompt,
         associatedProjectId: suggestion.projectId,
         associatedSuggestionId: suggestion.suggestionId
       })
 
-      // Add initial prompt message if exists
-      if (suggestion.initialPrompt) {
-        addMessage(chatId, {
-          role: 'prompt',
-          content: suggestion.initialPrompt,
-          isPlaceholder: false,
-          isError: false
-        })
-      }
-
-      // Add execution output if exists
-      if (suggestion.executionOutput) {
+      // Add initial chat message if exists (pre-generated intro)
+      if (suggestion.initialChatMessage) {
         addMessage(chatId, {
           role: 'assistant',
-          content: suggestion.executionOutput,
+          content: suggestion.initialChatMessage,
           isPlaceholder: false,
           isError: false
         })
       }
-
-      // Get the created chat and open it
-      const newChat = getChat(chatId)
-      if (newChat) {
-        onOpenChat(newChat)
-      }
     }
+
+    // Navigate main app to the chat and hide popup
+    console.log('[PopupSuggestionCard] Navigating to chat:', chatId)
+    window.api.popup.navigateToChat(chatId).then((result) => {
+      console.log('[PopupSuggestionCard] navigateToChat result:', result)
+    })
+    window.api.popup.hide()
   }
 
   const handleDismiss = (e: React.MouseEvent): void => {

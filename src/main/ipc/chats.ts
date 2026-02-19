@@ -140,39 +140,28 @@ export function registerChatHandlers(): void {
         throw new Error(`Chat ${chatId} not found`)
       }
 
-      // Mark chat as loading (UI shows typing indicator)
-      dataStore.updateChat(chatId, { isLoadingResponse: true })
+      // NOTE: isLoadingResponse is managed by the frontend (useChat hook)
+      // We don't update it here to avoid state sync conflicts
+      // The frontend sets it before calling this, and clears it when this resolves
 
       // Get the sender's webContents for streaming responses back
       const webContents = event.sender
       const window = BrowserWindow.fromWebContents(webContents)
 
-      try {
-        // Generate streaming response
-        await chatService.generateResponse(
-          chat,
-          content,
-          // Chunk callback - sends each text chunk to the renderer
-          (chunk: string) => {
-            // Safety check: ensure window still exists
-            if (window && !window.isDestroyed()) {
-              webContents.send(IPC_CHANNELS.CHATS_STREAM_CHUNK, { chatId, chunk })
-            }
+      // Generate streaming response
+      await chatService.generateResponse(
+        chat,
+        content,
+        // Chunk callback - sends each text chunk to the renderer
+        (chunk: string) => {
+          // Safety check: ensure window still exists
+          if (window && !window.isDestroyed()) {
+            webContents.send(IPC_CHANNELS.CHATS_STREAM_CHUNK, { chatId, chunk })
           }
-        )
+        }
+      )
 
-        // Success - mark loading complete
-        dataStore.updateChat(chatId, {
-          isLoadingResponse: false,
-          hasReceivedInitialResponse: true
-        })
-
-        return { success: true }
-      } catch (error) {
-        // Error - ensure loading state is cleared
-        dataStore.updateChat(chatId, { isLoadingResponse: false })
-        throw error
-      }
+      return { success: true }
     }
   )
 }

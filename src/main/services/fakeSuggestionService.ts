@@ -120,7 +120,7 @@ class FakeSuggestionService {
       status: 'active',
       keywords: template.keywords,
       approach: template.approach,
-      executionOutput: template.initialResponse,
+      executionOutput: '',
       executionSummary: { title: '', description: '' },
       support: 0.7 + Math.random() * 0.3, // Random score between 0.7 and 1.0
       utilities: {
@@ -131,6 +131,7 @@ class FakeSuggestionService {
         decay: 0.1,
       },
       grounding: ['Detected from screen activity'],
+      initialChatMessage: template.initialResponse,
       createdAt: timestamp,
       updatedAt: timestamp,
     }

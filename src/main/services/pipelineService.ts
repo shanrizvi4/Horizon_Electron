@@ -344,6 +344,7 @@ class PipelineService {
       support: scored.scores.combined,
       utilities,
       grounding: scored.supportEvidence,
+      initialChatMessage: scored.initialChatMessage,
       createdAt: now,
       updatedAt: now
     }

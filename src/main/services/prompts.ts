@@ -104,6 +104,13 @@ Generate 1-2 actionable suggestions. Each suggestion should have:
 - rawSupport: 1-10 score for how much information you have to actually complete this task
   - 1 = You don't have the information needed
   - 10 = You have everything needed to comprehensively complete it
+- initialChatMessage: A detailed, helpful opening message (3-6 paragraphs) shown when the user starts a chat about this suggestion. This should:
+  1. Explain specifically what you observed on their screen that led to this suggestion
+  2. Describe the suggestion in detail - what it involves and why it would help
+  3. Outline the concrete steps or approach you'd recommend
+  4. Mention any relevant context, best practices, or considerations
+  5. End by asking what aspect they'd like to start with or if they have questions
+  Be conversational, specific, and thorough. Use markdown formatting (headers, bullet points, code blocks if relevant).
 
 PRINCIPLES - You must follow these:
 - Provide actionable and SPECIFIC recommendations
@@ -129,7 +136,8 @@ Respond in JSON format:
       "approach": "...",
       "keywords": ["..."],
       "supportEvidence": "...",
-      "rawSupport": 7
+      "rawSupport": 7,
+      "initialChatMessage": "..."
     }
   ]
 }`,

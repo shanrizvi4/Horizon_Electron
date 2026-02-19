@@ -539,6 +539,20 @@ const api = {
       }
       ipcRenderer.on(IPC_CHANNELS.POPUP_VISIBILITY_CHANGE, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.POPUP_VISIBILITY_CHANGE, listener)
+    },
+
+    /**
+     * Subscribe to navigate to chat events from popup.
+     *
+     * @param callback - Called with chatId when popup requests navigation
+     * @returns Cleanup function to unsubscribe
+     */
+    onNavigateToChat: (callback: (chatId: string) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, chatId: string) => {
+        callback(chatId)
+      }
+      ipcRenderer.on('navigate:chat', listener)
+      return () => ipcRenderer.removeListener('navigate:chat', listener)
     }
   },
 
