@@ -6,6 +6,10 @@ When a feature, bug fix, or task is completed (either explicitly stated by the u
 
 Use descriptive commit messages that summarize what was done.
 
+## Trigger Phrases
+
+**"clear data"** - When the user says "clear data", immediately run the clearing command below in background mode. This clears all pipeline data (screenshots, frame analysis, suggestions, etc.), resets state.json, and restarts the server. No confirmation needed.
+
 ## Clearing Pipeline Data & Restarting Fresh
 
 Use this single bash command to clear everything and restart:
