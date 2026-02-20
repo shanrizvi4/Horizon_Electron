@@ -206,14 +206,19 @@ textarea {
   max-width: 320px;
 }
 
-/* Liquid glass border effect on focus */
+/* Liquid glass border effect */
 .search-bar::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: var(--radius-lg);
-  padding: 1px;
-  background: transparent;
+  padding: .5px;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--glass-rgb), 0.15) 0%,
+    rgba(var(--glass-rgb), 0.05) 50%,
+    rgba(var(--glass-rgb), 0.15) 100%
+  );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -230,13 +235,13 @@ textarea {
 .search-bar:focus-within::before {
   background: linear-gradient(
     135deg,
-    rgba(var(--glass-rgb), 0.18) 0%,
-    rgba(var(--glass-rgb), 0.14) 25%,
-    rgba(var(--glass-rgb), 0.05) 40%,
-    rgba(var(--glass-rgb), 0.02) 50%,
-    rgba(var(--glass-rgb), 0.05) 60%,
-    rgba(var(--glass-rgb), 0.14) 75%,
-    rgba(var(--glass-rgb), 0.18) 100%
+    rgba(var(--glass-rgb), 0.22) 0%,
+    rgba(var(--glass-rgb), 0.18) 25%,
+    rgba(var(--glass-rgb), 0.07) 40%,
+    rgba(var(--glass-rgb), 0.03) 50%,
+    rgba(var(--glass-rgb), 0.07) 60%,
+    rgba(var(--glass-rgb), 0.18) 75%,
+    rgba(var(--glass-rgb), 0.22) 100%
   );
 }
 
