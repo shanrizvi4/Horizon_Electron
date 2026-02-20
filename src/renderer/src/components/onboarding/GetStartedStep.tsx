@@ -41,7 +41,7 @@ export const GetStartedStep: React.FC<GetStartedStepProps> = ({ onComplete, onBa
           Horizon will work quietly in the background, surfacing helpful suggestions when they matter.
         </p>
 
-        <div className="recording-toggle-card">
+        <div className={`recording-toggle-card ${enableRecording ? 'enabled' : ''}`}>
           <div className="recording-toggle-content">
             <div className="recording-toggle-icon">
               <svg

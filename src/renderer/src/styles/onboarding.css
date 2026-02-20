@@ -249,17 +249,17 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  transition: background var(--transition-normal);
+  transition: background 600ms ease;
 }
 
 .permission-card.granted::before {
   background: linear-gradient(
     135deg,
-    rgba(123, 165, 123, 0.35) 0%,
-    rgba(123, 165, 123, 0.2) 25%,
-    rgba(123, 165, 123, 0.08) 50%,
-    rgba(123, 165, 123, 0.2) 75%,
-    rgba(123, 165, 123, 0.35) 100%
+    rgba(75, 125, 75, 0.45) 0%,
+    rgba(75, 125, 75, 0.28) 25%,
+    rgba(75, 125, 75, 0.12) 50%,
+    rgba(75, 125, 75, 0.28) 75%,
+    rgba(75, 125, 75, 0.45) 100%
   );
 }
 
@@ -721,6 +721,18 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+  transition: background 600ms ease;
+}
+
+.recording-toggle-card.enabled::before {
+  background: linear-gradient(
+    135deg,
+    rgba(75, 125, 75, 0.45) 0%,
+    rgba(75, 125, 75, 0.28) 25%,
+    rgba(75, 125, 75, 0.12) 50%,
+    rgba(75, 125, 75, 0.28) 75%,
+    rgba(75, 125, 75, 0.45) 100%
+  );
 }
 
 .recording-toggle-content {
@@ -800,7 +812,7 @@
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: var(--accent-success);
+  background-color: var(--theme-btn-green);
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
