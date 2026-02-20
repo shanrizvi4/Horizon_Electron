@@ -233,16 +233,16 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(var(--glass-rgb), 0.1);
-  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08);
+  border: 1px solid rgba(var(--glass-rgb), 0.06);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.05);
   cursor: pointer;
   transition: all 200ms ease;
 }
 
 .popup-card-chat-btn:hover {
   background: var(--theme-btn-blue-hover);
-  border-color: rgba(var(--glass-rgb), 0.2);
-  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: rgba(var(--glass-rgb), 0.08);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
   color: var(--btn-text);
 }
 
@@ -257,16 +257,16 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(var(--glass-rgb), 0.1);
-  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08);
+  border: 1px solid rgba(var(--glass-rgb), 0.06);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.05);
   cursor: pointer;
   transition: all 200ms ease;
 }
 
 .popup-card-remove-btn:hover {
   background: var(--theme-btn-red-light-hover);
-  border-color: rgba(var(--glass-rgb), 0.2);
-  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: rgba(var(--glass-rgb), 0.08);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
   color: var(--btn-text);
 }
 

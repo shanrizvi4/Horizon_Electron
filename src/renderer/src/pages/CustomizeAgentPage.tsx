@@ -57,35 +57,29 @@ export function CustomizeAgentPage(): React.JSX.Element {
       </div>
       <div className="content-body">
         <div className="page">
-          <div className="page-header">
-            <p className="page-subtitle">
-              Configure how the agent generates suggestions and interacts with you.
-            </p>
-          </div>
-
           <div className="customize-agent-section">
             <h3 className="customize-agent-section-title">Focus More On</h3>
             <p className="customize-agent-section-description">
               Topics, areas, or types of suggestions you want the agent to prioritize.
             </p>
+            <div className="customize-agent-textarea-wrapper">
             <textarea
               className="customize-agent-textarea"
               value={focusMoreOn}
               onChange={(e) => setFocusMoreOn(e.target.value)}
               placeholder="e.g., Performance optimization, security best practices, code quality..."
             />
-            <div className="customize-agent-actions">
+            </div>
+            <div className={`customize-agent-actions ${hasChanges.focusMoreOn ? 'visible' : ''}`}>
               <button
-                className="btn btn-primary"
+                className="customize-agent-btn customize-agent-btn-apply"
                 onClick={() => handleApply('focusMoreOn')}
-                disabled={!hasChanges.focusMoreOn}
               >
                 Apply
               </button>
               <button
-                className="btn btn-secondary"
+                className="customize-agent-btn customize-agent-btn-revert"
                 onClick={() => handleRevert('focusMoreOn')}
-                disabled={!hasChanges.focusMoreOn}
               >
                 Revert
               </button>
@@ -97,24 +91,24 @@ export function CustomizeAgentPage(): React.JSX.Element {
             <p className="customize-agent-section-description">
               Topics or areas you want the agent to de-prioritize in suggestions.
             </p>
+            <div className="customize-agent-textarea-wrapper">
             <textarea
               className="customize-agent-textarea"
               value={focusLessOn}
               onChange={(e) => setFocusLessOn(e.target.value)}
               placeholder="e.g., UI styling, documentation, minor refactoring..."
             />
-            <div className="customize-agent-actions">
+            </div>
+            <div className={`customize-agent-actions ${hasChanges.focusLessOn ? 'visible' : ''}`}>
               <button
-                className="btn btn-primary"
+                className="customize-agent-btn customize-agent-btn-apply"
                 onClick={() => handleApply('focusLessOn')}
-                disabled={!hasChanges.focusLessOn}
               >
                 Apply
               </button>
               <button
-                className="btn btn-secondary"
+                className="customize-agent-btn customize-agent-btn-revert"
                 onClick={() => handleRevert('focusLessOn')}
-                disabled={!hasChanges.focusLessOn}
               >
                 Revert
               </button>
@@ -126,24 +120,24 @@ export function CustomizeAgentPage(): React.JSX.Element {
             <p className="customize-agent-section-description">
               How you prefer the agent to communicate with you.
             </p>
+            <div className="customize-agent-textarea-wrapper">
             <textarea
               className="customize-agent-textarea"
               value={style}
               onChange={(e) => setStyle(e.target.value)}
               placeholder="e.g., Concise and technical, detailed explanations, code examples..."
             />
-            <div className="customize-agent-actions">
+            </div>
+            <div className={`customize-agent-actions ${hasChanges.style ? 'visible' : ''}`}>
               <button
-                className="btn btn-primary"
+                className="customize-agent-btn customize-agent-btn-apply"
                 onClick={() => handleApply('style')}
-                disabled={!hasChanges.style}
               >
                 Apply
               </button>
               <button
-                className="btn btn-secondary"
+                className="customize-agent-btn customize-agent-btn-revert"
                 onClick={() => handleRevert('style')}
-                disabled={!hasChanges.style}
               >
                 Revert
               </button>

@@ -119,7 +119,7 @@
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   transition: all var(--transition-normal);
   text-align: left;
   cursor: pointer;
@@ -255,9 +255,9 @@
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(var(--glass-rgb), 0.1);
-  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(var(--glass-rgb), 0.06);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.05);
   cursor: pointer;
   transition: all 200ms ease;
   overflow: hidden;
@@ -265,8 +265,8 @@
 
 .sidebar-new-chat-btn:hover {
   background: var(--theme-btn-blue-hover);
-  border-color: rgba(var(--glass-rgb), 0.2);
-  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.12), 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: rgba(var(--glass-rgb), 0.08);
+  box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
   color: var(--btn-text);
 }
 
@@ -285,7 +285,7 @@
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   border: 1px solid rgba(var(--glass-rgb), 0.05);
   box-shadow: inset 0 1px 0 rgba(var(--glass-rgb), 0.08);
   cursor: pointer;
